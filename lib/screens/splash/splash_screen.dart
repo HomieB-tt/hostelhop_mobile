@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
@@ -48,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen>
     // Navigate after delay.
     Future.delayed(const Duration(milliseconds: 2800), () {
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/onboarding');
+        context.go('/onboarding');
       }
     });
   }

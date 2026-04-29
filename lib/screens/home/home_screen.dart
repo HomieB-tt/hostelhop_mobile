@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -53,11 +54,14 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
+              )
+                  .animate()
+                  .fadeIn(duration: 400.ms, delay: 200.ms)
+                  .slideY(begin: 0.06, end: 0, curve: Curves.easeOut),
             ),
           ),
 
-          // ── Hostel listings ──
+          // ── Hostel listings with staggered animation ──
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             sliver: SliverList(
@@ -70,12 +74,43 @@ class HomeScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => HostelDetailScreen(hostel: hostel),
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) =>
+                              HostelDetailScreen(hostel: hostel),
+                          transitionDuration: const Duration(milliseconds: 350),
+                          reverseTransitionDuration:
+                              const Duration(milliseconds: 250),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            final curved = CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            );
+                            return SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(1, 0),
+                                end: Offset.zero,
+                              ).animate(curved),
+                              child:
+                                  FadeTransition(opacity: curved, child: child),
+                            );
+                          },
                         ),
                       );
                     },
-                  ),
+                  )
+                      .animate()
+                      .fadeIn(
+                        duration: 400.ms,
+                        delay: Duration(milliseconds: 300 + (index * 80)),
+                      )
+                      .slideY(
+                        begin: 0.06,
+                        end: 0,
+                        delay: Duration(milliseconds: 300 + (index * 80)),
+                        duration: 400.ms,
+                        curve: Curves.easeOutCubic,
+                      ),
                 );
               }, childCount: MockData.hostels.length),
             ),

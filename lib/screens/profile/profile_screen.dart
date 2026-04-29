@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -17,7 +18,8 @@ class ProfileScreen extends ConsumerWidget {
     final colors = context.hhColors;
     final theme = Theme.of(context);
     final student = MockData.studentProfile;
-    final themeMode = ref.watch(themeProvider);
+    final currentTheme = ref.watch(themeProvider);
+    final isDark = currentTheme == ThemeMode.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -60,7 +62,14 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 400.ms)
+                .scaleXY(
+                    begin: 0.7,
+                    end: 1,
+                    duration: 500.ms,
+                    curve: Curves.easeOutBack),
 
             const SizedBox(height: 16),
 
@@ -69,17 +78,24 @@ class ProfileScreen extends ConsumerWidget {
               style: AppTypography.headlineSmall.copyWith(
                 color: colors.textHigh,
               ),
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 350.ms, delay: 150.ms)
+                .slideY(begin: 0.06, end: 0),
             const SizedBox(height: 4),
             Text(
               student.university ?? '',
               style: AppTypography.bodyMedium.copyWith(color: colors.textMid),
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 350.ms, delay: 220.ms),
             const SizedBox(height: 4),
             Text(
               student.phone,
               style: AppTypography.bodySmall.copyWith(color: colors.textLow),
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 350.ms, delay: 280.ms),
 
             const SizedBox(height: 28),
 
@@ -114,7 +130,10 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 400.ms, delay: 350.ms)
+                .slideY(begin: 0.06, end: 0),
 
             const SizedBox(height: 16),
 
@@ -129,18 +148,25 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   // Dark mode toggle
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     child: Row(
                       children: [
-                        Icon(
-                          themeMode == ThemeMode.dark
-                              ? Icons.dark_mode_rounded
-                              : Icons.light_mode_rounded,
-                          size: 20,
-                          color: AppColors.orangeBright,
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          transitionBuilder: (child, anim) => RotationTransition(
+                            turns: Tween(begin: 0.75, end: 1.0).animate(anim),
+                            child:
+                                FadeTransition(opacity: anim, child: child),
+                          ),
+                          child: Icon(
+                            isDark
+                                ? Icons.dark_mode_rounded
+                                : Icons.light_mode_rounded,
+                            key: ValueKey(isDark),
+                            size: 20,
+                            color: AppColors.orangeBright,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
@@ -152,7 +178,7 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                         ),
                         Switch(
-                          value: themeMode == ThemeMode.dark,
+                          value: isDark,
                           onChanged: (_) =>
                               ref.read(themeProvider.notifier).toggleTheme(),
                           activeThumbColor: AppColors.orangeBright,
@@ -177,7 +203,10 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 400.ms, delay: 450.ms)
+                .slideY(begin: 0.06, end: 0),
 
             const SizedBox(height: 16),
 
@@ -195,10 +224,13 @@ class ProfileScreen extends ConsumerWidget {
                 colors: colors,
                 isDestructive: true,
                 onTap: () {
-                  Navigator.pushReplacementNamed(context, '/login');
+                  // TODO: wire to auth provider
                 },
               ),
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 400.ms, delay: 550.ms)
+                .slideY(begin: 0.06, end: 0),
 
             const SizedBox(height: 24),
           ],
@@ -261,7 +293,11 @@ class _ProfileTile extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, size: 20, color: colors.textLow),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: colors.textLow,
+            ),
           ],
         ),
       ),

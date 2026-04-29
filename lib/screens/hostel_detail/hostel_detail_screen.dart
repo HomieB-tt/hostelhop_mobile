@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -65,7 +66,10 @@ class HostelDetailScreen extends StatelessWidget {
                           fontSize: 11,
                         ),
                       ),
-                    ),
+                    )
+                        .animate()
+                        .fadeIn(duration: 400.ms, delay: 300.ms)
+                        .slideX(begin: 0.2, end: 0, curve: Curves.easeOut),
                   ],
                   flexibleSpace: FlexibleSpaceBar(
                     background: Container(
@@ -104,7 +108,10 @@ class HostelDetailScreen extends StatelessWidget {
                           style: AppTypography.headlineMedium.copyWith(
                             color: colors.textHigh,
                           ),
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 350.ms, delay: 100.ms)
+                            .slideY(begin: 0.08, end: 0),
                         const SizedBox(height: 6),
 
                         // Address
@@ -125,7 +132,10 @@ class HostelDetailScreen extends StatelessWidget {
                               ),
                             ),
                           ],
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 350.ms, delay: 180.ms)
+                            .slideY(begin: 0.06, end: 0),
 
                         const SizedBox(height: 12),
 
@@ -158,22 +168,27 @@ class HostelDetailScreen extends StatelessWidget {
                                 ),
                               ),
                             ],
-                          ),
+                          )
+                              .animate()
+                              .fadeIn(duration: 350.ms, delay: 250.ms)
+                              .slideY(begin: 0.06, end: 0),
 
                         const SizedBox(height: 24),
 
-                        // Amenities
+                        // Amenities section
                         Text(
                           AppStrings.amenities,
                           style: AppTypography.titleMedium.copyWith(
                             color: colors.textHigh,
                           ),
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 350.ms, delay: 320.ms),
                         const SizedBox(height: 12),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: hostel.amenities.map((a) {
+                          children: hostel.amenities.asMap().entries.map((e) {
                             return Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 14,
@@ -187,12 +202,26 @@ class HostelDetailScreen extends StatelessWidget {
                                 ),
                               ),
                               child: Text(
-                                a,
+                                e.value,
                                 style: AppTypography.labelMedium.copyWith(
                                   color: colors.textMid,
                                 ),
                               ),
-                            );
+                            )
+                                .animate()
+                                .fadeIn(
+                                  duration: 300.ms,
+                                  delay: Duration(
+                                      milliseconds: 350 + (e.key * 50)),
+                                )
+                                .scaleXY(
+                                  begin: 0.85,
+                                  end: 1,
+                                  delay: Duration(
+                                      milliseconds: 350 + (e.key * 50)),
+                                  duration: 300.ms,
+                                  curve: Curves.easeOutBack,
+                                );
                           }).toList(),
                         ),
 
@@ -207,7 +236,6 @@ class HostelDetailScreen extends StatelessWidget {
                           ),
                           child: Row(
                             children: [
-                              // Number
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -226,31 +254,38 @@ class HostelDetailScreen extends StatelessWidget {
                                   ),
                                 ],
                               ),
-
                               const SizedBox(width: 20),
-
-                              // Progress bar
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(6),
-                                      child: LinearProgressIndicator(
-                                        value: hostel.totalRooms > 0
-                                            ? (hostel.totalRooms -
+                                      child: TweenAnimationBuilder<double>(
+                                        tween: Tween(
+                                          begin: 0,
+                                          end: hostel.totalRooms > 0
+                                              ? (hostel.totalRooms -
                                                       hostel.availableRooms) /
                                                   hostel.totalRooms
-                                            : 0,
-                                        backgroundColor: theme
-                                            .colorScheme
-                                            .outline
-                                            .withValues(alpha: 0.2),
-                                        valueColor:
-                                            const AlwaysStoppedAnimation(
+                                              : 0,
+                                        ),
+                                        duration:
+                                            const Duration(milliseconds: 1200),
+                                        curve: Curves.easeOutCubic,
+                                        builder: (context, value, _) {
+                                          return LinearProgressIndicator(
+                                            value: value,
+                                            backgroundColor: theme
+                                                .colorScheme.outline
+                                                .withValues(alpha: 0.2),
+                                            valueColor:
+                                                const AlwaysStoppedAnimation(
                                               AppColors.orangeBright,
                                             ),
-                                        minHeight: 8,
+                                            minHeight: 8,
+                                          );
+                                        },
                                       ),
                                     ),
                                     const SizedBox(height: 6),
@@ -266,7 +301,10 @@ class HostelDetailScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 400.ms, delay: 500.ms)
+                            .slideY(begin: 0.06, end: 0),
 
                         const SizedBox(height: 24),
 
@@ -278,11 +316,13 @@ class HostelDetailScreen extends StatelessWidget {
                               color: colors.textMid,
                               height: 1.6,
                             ),
-                          ),
+                          )
+                              .animate()
+                              .fadeIn(duration: 400.ms, delay: 600.ms),
 
                         const SizedBox(height: 24),
 
-                        // Price
+                        // Price card
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
@@ -327,7 +367,10 @@ class HostelDetailScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 400.ms, delay: 680.ms)
+                            .slideY(begin: 0.06, end: 0),
 
                         const SizedBox(height: 12),
                       ],
@@ -355,8 +398,27 @@ class HostelDetailScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => PaymentScreen(hostel: hostel),
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          PaymentScreen(hostel: hostel),
+                      transitionDuration: const Duration(milliseconds: 400),
+                      reverseTransitionDuration:
+                          const Duration(milliseconds: 300),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) {
+                        final curved = CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutCubic,
+                        );
+                        return SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.12),
+                            end: Offset.zero,
+                          ).animate(curved),
+                          child: FadeTransition(
+                              opacity: curved, child: child),
+                        );
+                      },
                     ),
                   );
                 },
@@ -364,7 +426,10 @@ class HostelDetailScreen extends StatelessWidget {
                 width: double.infinity,
               ),
             ),
-          ),
+          )
+              .animate()
+              .fadeIn(duration: 350.ms, delay: 400.ms)
+              .slideY(begin: 0.15, end: 0, curve: Curves.easeOut),
         ],
       ),
     );

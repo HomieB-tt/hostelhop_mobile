@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -27,6 +28,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      transitionAnimationController: AnimationController(
+        vsync: Navigator.of(context),
+        duration: const Duration(milliseconds: 400),
+      ),
       builder: (context) => CheckoutSheet(
         hostel: widget.hostel,
         paymentMethod: _selectedMethod,
@@ -77,20 +82,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                   const SizedBox(height: 16),
                   _SummaryRow(
-                    label: 'Hostel',
-                    value: widget.hostel.name,
-                    colors: colors,
-                  ),
+                      label: 'Hostel',
+                      value: widget.hostel.name,
+                      colors: colors),
                   _SummaryRow(
-                    label: 'Room Type',
-                    value: 'Double',
-                    colors: colors,
-                  ),
+                      label: 'Room Type', value: 'Double', colors: colors),
                   _SummaryRow(
-                    label: 'Semester',
-                    value: 'Sem 2, 2026',
-                    colors: colors,
-                  ),
+                      label: 'Semester',
+                      value: 'Sem 2, 2026',
+                      colors: colors),
                   const Divider(height: 24),
                   _SummaryRow(
                     label: 'Total',
@@ -100,23 +100,33 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                 ],
               ),
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 400.ms, delay: 100.ms)
+                .slideY(begin: 0.06, end: 0),
 
             const SizedBox(height: 24),
 
             // ── Payment method ──
             Text(
               AppStrings.paymentMethod,
-              style: AppTypography.titleMedium.copyWith(color: colors.textHigh),
-            ),
+              style:
+                  AppTypography.titleMedium.copyWith(color: colors.textHigh),
+            )
+                .animate()
+                .fadeIn(duration: 350.ms, delay: 250.ms),
             const SizedBox(height: 12),
 
             _PaymentMethodTile(
               name: AppStrings.mtnMobileMoney,
               color: const Color(0xFFFFD600),
               isSelected: _selectedMethod == 'MTN Mobile Money',
-              onTap: () => setState(() => _selectedMethod = 'MTN Mobile Money'),
-            ),
+              onTap: () =>
+                  setState(() => _selectedMethod = 'MTN Mobile Money'),
+            )
+                .animate()
+                .fadeIn(duration: 350.ms, delay: 320.ms)
+                .slideX(begin: -0.04, end: 0),
 
             const SizedBox(height: 10),
 
@@ -125,7 +135,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
               color: const Color(0xFFFF0000),
               isSelected: _selectedMethod == 'Airtel Money',
               onTap: () => setState(() => _selectedMethod = 'Airtel Money'),
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 350.ms, delay: 400.ms)
+                .slideX(begin: -0.04, end: 0),
 
             const Spacer(),
 
@@ -135,7 +148,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
               text: '${AppStrings.payNow} — ${Formatters.formatUGX(amount)}',
               width: double.infinity,
               icon: Icons.lock_rounded,
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 400.ms, delay: 500.ms)
+                .slideY(begin: 0.1, end: 0),
 
             const SizedBox(height: 16),
           ],
@@ -167,16 +183,19 @@ class _SummaryRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: AppTypography.bodyMedium.copyWith(color: colors.textMid),
+            style: AppTypography.bodyMedium.copyWith(
+              color: colors.textMid,
+            ),
           ),
           Text(
             value,
-            style:
-                (isBold ? AppTypography.titleMedium : AppTypography.bodyMedium)
-                    .copyWith(
-                      color: colors.textHigh,
-                      fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
-                    ),
+            style: (isBold
+                    ? AppTypography.titleMedium
+                    : AppTypography.bodyMedium)
+                .copyWith(
+              color: colors.textHigh,
+              fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -205,6 +224,7 @@ class _PaymentMethodTile extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
@@ -215,14 +235,24 @@ class _PaymentMethodTile extends StatelessWidget {
                 : theme.colorScheme.outline,
             width: isSelected ? 2 : 1,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.orangeBright.withValues(alpha: 0.1),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           children: [
-            Container(
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
+                color: color.withValues(alpha: isSelected ? 0.2 : 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
@@ -245,12 +275,19 @@ class _PaymentMethodTile extends StatelessWidget {
                 ),
               ),
             ),
-            if (isSelected)
-              const Icon(
-                Icons.check_circle,
-                color: AppColors.orangeBright,
-                size: 22,
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (child, anim) => ScaleTransition(
+                scale: anim,
+                child: child,
               ),
+              child: isSelected
+                  ? const Icon(Icons.check_circle,
+                      key: ValueKey('check'),
+                      color: AppColors.orangeBright,
+                      size: 22)
+                  : const SizedBox(key: ValueKey('empty'), width: 22),
+            ),
           ],
         ),
       ),

@@ -6,22 +6,17 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
 /// Main app shell with bottom navigation after authentication.
-class HomeShell extends StatefulWidget {
+class HomeShell extends StatelessWidget {
   const HomeShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  State<HomeShell> createState() => _HomeShellState();
-}
-
-class _HomeShellState extends State<HomeShell> {
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: widget.navigationShell,
+      body: navigationShell,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
@@ -39,32 +34,25 @@ class _HomeShellState extends State<HomeShell> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _NavItem(
-                  icon: Icons.home_rounded,
+                  icon: Icons.home_outlined,
                   activeIcon: Icons.home_rounded,
                   label: AppStrings.navHome,
-                  isActive: widget.navigationShell.currentIndex == 0,
-                  onTap: () => widget.navigationShell.goBranch(0),
-                ),
-                _NavItem(
-                  icon: Icons.explore_outlined,
-                  activeIcon: Icons.explore_rounded,
-                  label: AppStrings.navExplore,
-                  isActive: widget.navigationShell.currentIndex == 1,
-                  onTap: () => widget.navigationShell.goBranch(1),
+                  isActive: navigationShell.currentIndex == 0,
+                  onTap: () => navigationShell.goBranch(0),
                 ),
                 _NavItem(
                   icon: Icons.calendar_today_outlined,
                   activeIcon: Icons.calendar_today_rounded,
                   label: AppStrings.navBookings,
-                  isActive: widget.navigationShell.currentIndex == 2,
-                  onTap: () => widget.navigationShell.goBranch(2),
+                  isActive: navigationShell.currentIndex == 1,
+                  onTap: () => navigationShell.goBranch(1),
                 ),
                 _NavItem(
                   icon: Icons.person_outline_rounded,
                   activeIcon: Icons.person_rounded,
                   label: AppStrings.navProfile,
-                  isActive: widget.navigationShell.currentIndex == 3,
-                  onTap: () => widget.navigationShell.goBranch(3),
+                  isActive: navigationShell.currentIndex == 2,
+                  onTap: () => navigationShell.goBranch(2),
                 ),
               ],
             ),
@@ -75,7 +63,7 @@ class _HomeShellState extends State<HomeShell> {
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _NavItem extends StatefulWidget {
   const _NavItem({
     required this.icon,
     required this.activeIcon,
@@ -91,15 +79,59 @@ class _NavItem extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_NavItem> createState() => _NavItemState();
+}
+
+class _NavItemState extends State<_NavItem>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _bounceController;
+  late final Animation<double> _bounceAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _bounceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _bounceAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.85), weight: 30),
+      TweenSequenceItem(tween: Tween(begin: 0.85, end: 1.1), weight: 40),
+      TweenSequenceItem(tween: Tween(begin: 1.1, end: 1.0), weight: 30),
+    ]).animate(CurvedAnimation(
+      parent: _bounceController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void didUpdateWidget(_NavItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      _bounceController.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _bounceController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final inactiveColor =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45);
+
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive
+          color: widget.isActive
               ? AppColors.orangeBright.withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
@@ -107,27 +139,32 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              isActive ? activeIcon : icon,
-              size: 24,
-              color: isActive
-                  ? AppColors.orangeBright
-                  : Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.45),
+            AnimatedBuilder(
+              animation: _bounceAnimation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _bounceAnimation.value,
+                  child: child,
+                );
+              },
+              child: Icon(
+                widget.isActive ? widget.activeIcon : widget.icon,
+                size: 24,
+                color: widget.isActive ? AppColors.orangeBright : inactiveColor,
+              ),
             ),
             const SizedBox(height: 4),
-            Text(
-              label,
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
               style: AppTypography.labelSmall.copyWith(
-                color: isActive
-                    ? AppColors.orangeBright
-                    : Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.45),
+                color:
+                    widget.isActive ? AppColors.orangeBright : inactiveColor,
                 fontSize: 11,
+                fontWeight:
+                    widget.isActive ? FontWeight.w700 : FontWeight.w500,
                 letterSpacing: 0.3,
               ),
+              child: Text(widget.label),
             ),
           ],
         ),

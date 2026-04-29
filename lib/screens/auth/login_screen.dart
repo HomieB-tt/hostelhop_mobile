@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -34,23 +35,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _handleSignIn() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref
-        .read(mockAuthProvider.notifier)
-        .signIn(_phoneController.text.trim(), _passwordController.text);
+    final success = await ref.read(mockAuthProvider.notifier).signIn(
+          _phoneController.text.trim(),
+          _passwordController.text,
+        );
 
-    if (mounted) {
-      if (success) {
-        // Navigate to home using GoRouter
-        ref.read(goRouterProvider).go('/home');
-      } else {
-        // Error will be handled by the auth provider state
-        // Show error snackbar if no error message from provider
-        if (ref.read(mockAuthProvider).errorMessage == null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Sign in failed')));
-        }
-      }
+    if (success && mounted) {
+      ref.read(goRouterProvider).go('/home');
     }
   }
 
@@ -92,14 +83,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           style: AppTypography.headlineMedium.copyWith(
                             color: colors.textHigh,
                           ),
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 350.ms, delay: 200.ms)
+                            .slideY(begin: 0.08, end: 0),
                         const SizedBox(height: 4),
                         Text(
                           AppStrings.signInSubtitle,
                           style: AppTypography.bodyMedium.copyWith(
                             color: colors.textMid,
                           ),
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 350.ms, delay: 280.ms)
+                            .slideY(begin: 0.06, end: 0),
 
                         const SizedBox(height: 28),
 
@@ -110,7 +107,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             color: colors.textMid,
                             letterSpacing: 1.0,
                           ),
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 300.ms, delay: 350.ms),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _phoneController,
@@ -119,17 +118,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           decoration: InputDecoration(
                             hintText: AppStrings.phoneHint,
                             prefixIcon: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 16,
-                                right: 8,
-                              ),
+                              padding:
+                                  const EdgeInsets.only(left: 16, right: 8),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Text(
-                                    '🇺🇬',
-                                    style: TextStyle(fontSize: 18),
-                                  ),
+                                  const Text('🇺🇬',
+                                      style: TextStyle(fontSize: 18)),
                                   const SizedBox(width: 6),
                                   Text(
                                     AppStrings.phonePrefix,
@@ -141,15 +136,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   Container(
                                     width: 1,
                                     height: 24,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.outline,
+                                    color:
+                                        Theme.of(context).colorScheme.outline,
                                   ),
                                 ],
                               ),
                             ),
                           ),
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 350.ms, delay: 400.ms)
+                            .slideY(begin: 0.06, end: 0),
 
                         const SizedBox(height: 20),
 
@@ -160,7 +157,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             color: colors.textMid,
                             letterSpacing: 1.0,
                           ),
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 300.ms, delay: 460.ms),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _passwordController,
@@ -170,13 +169,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             hintText: AppStrings.passwordHint,
                             prefixIcon: Icon(
                               Icons.lock_outline_rounded,
-                              color: colors.textHigh,
+                              color: colors.textLow,
                               size: 20,
                             ),
                             suffixIcon: GestureDetector(
                               onTap: () => setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              ),
+                                  () => _obscurePassword = !_obscurePassword),
                               child: Padding(
                                 padding: const EdgeInsets.only(right: 12),
                                 child: Text(
@@ -192,7 +190,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               minHeight: 0,
                             ),
                           ),
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 350.ms, delay: 500.ms)
+                            .slideY(begin: 0.06, end: 0),
 
                         // Forgot password
                         Align(
@@ -202,7 +203,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: Text(
                               AppStrings.forgotPassword,
                               style: AppTypography.labelMedium.copyWith(
-                                color: colors.link,
+                                color: AppColors.orangeBright,
                               ),
                             ),
                           ),
@@ -217,7 +218,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             padding: const EdgeInsets.all(12),
                             margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
-                              color: AppColors.error.withValues(alpha: 0.1),
+                              color: AppColors.errorSoft,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: AppColors.error.withValues(alpha: 0.3),
@@ -230,16 +231,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ),
+                          )
+                              .animate()
+                              .shakeX(
+                                  hz: 3,
+                                  amount: 4,
+                                  duration: 400.ms)
+                              .fadeIn(duration: 200.ms),
 
                         // Sign In button
                         GradientButton(
-                          onPressed: authState.isLoading ? null : _handleSignIn,
+                          onPressed:
+                              authState.isLoading ? null : _handleSignIn,
                           text: AppStrings.signIn,
                           icon: Icons.login_rounded,
                           isLoading: authState.isLoading,
                           width: double.infinity,
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 400.ms, delay: 580.ms)
+                            .slideY(begin: 0.08, end: 0),
 
                         const SizedBox(height: 20),
 
@@ -248,10 +259,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: Text(
                             AppStrings.newToHostelHop,
                             style: AppTypography.bodySmall.copyWith(
-                              color: colors.textMid,
+                              color: colors.textLow,
                             ),
                           ),
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 300.ms, delay: 650.ms),
                         const SizedBox(height: 10),
 
                         // Create Account button
@@ -259,14 +272,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           width: double.infinity,
                           child: OutlinedButton.icon(
                             onPressed: () =>
-                                ref.read(goRouterProvider).go('/signup'),
+                                ref.read(goRouterProvider).push('/signup'),
                             icon: const Icon(
-                              Icons.person_add_alt_1_rounded,
-                              size: 18,
-                            ),
+                                Icons.person_add_alt_1_rounded,
+                                size: 18),
                             label: Text(AppStrings.signUp),
                           ),
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 350.ms, delay: 700.ms)
+                            .slideY(begin: 0.06, end: 0),
                       ],
                     ),
                   ),
@@ -286,7 +301,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         top: MediaQuery.of(context).padding.top + 20,
         bottom: 52,
       ),
-      decoration: const BoxDecoration(gradient: AppColors.splashGradient),
+      decoration: const BoxDecoration(
+        gradient: AppColors.splashGradient,
+      ),
       child: Column(
         children: [
           // Logo placeholder
@@ -302,7 +319,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               color: Colors.white,
               size: 28,
             ),
-          ),
+          )
+              .animate()
+              .fadeIn(duration: 400.ms)
+              .scaleXY(begin: 0.8, end: 1, curve: Curves.easeOutBack),
           const SizedBox(height: 12),
           RichText(
             text: TextSpan(
@@ -315,7 +335,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ],
             ),
-          ),
+          ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
           const SizedBox(height: 4),
           Text(
             AppStrings.tagline,
@@ -323,7 +343,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               color: Colors.white.withValues(alpha: 0.6),
               letterSpacing: 2.0,
             ),
-          ),
+          ).animate().fadeIn(duration: 400.ms, delay: 180.ms),
         ],
       ),
     );

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
 import '../../widgets/gradient_button.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:go_router/go_router.dart';
 
 /// Onboarding screen with 2 slides introducing HostelHop to new students.
 class OnboardingScreen extends StatefulWidget {
@@ -49,7 +51,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _navigateToLogin() {
-    Navigator.pushReplacementNamed(context, '/login');
+    context.go('/login');
   }
 
   @override
@@ -76,14 +78,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Text(
                     AppStrings.skip,
                     style: AppTypography.labelLarge.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.5),
                     ),
                   ),
                 ),
               ),
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 400.ms, delay: 300.ms),
 
             // ── Page content ──
             Expanded(
@@ -98,7 +103,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Illustration placeholder — large icon in an orange circle.
+                        // Illustration — large icon in a gradient circle.
                         Container(
                           width: 200,
                           height: 200,
@@ -122,7 +127,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             size: 80,
                             color: page.accentColor,
                           ),
-                        ),
+                        )
+                            .animate(
+                              key: ValueKey('icon_$index'),
+                            )
+                            .fadeIn(duration: 400.ms)
+                            .scaleXY(
+                              begin: 0.8,
+                              end: 1,
+                              duration: 500.ms,
+                              curve: Curves.easeOutBack,
+                            ),
 
                         const SizedBox(height: 48),
 
@@ -132,19 +147,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             color: Theme.of(context).colorScheme.onSurface,
                           ),
                           textAlign: TextAlign.center,
-                        ),
+                        )
+                            .animate(key: ValueKey('title_$index'))
+                            .fadeIn(duration: 400.ms, delay: 150.ms)
+                            .slideY(begin: 0.08, end: 0),
 
                         const SizedBox(height: 16),
 
                         Text(
                           page.subtitle,
                           style: AppTypography.bodyLarge.copyWith(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.6),
                           ),
                           textAlign: TextAlign.center,
-                        ),
+                        )
+                            .animate(key: ValueKey('sub_$index'))
+                            .fadeIn(duration: 400.ms, delay: 280.ms)
+                            .slideY(begin: 0.06, end: 0),
                       ],
                     ),
                   );
@@ -162,7 +184,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     count: _pages.length,
                     effect: ExpandingDotsEffect(
                       activeDotColor: AppColors.orangeBright,
-                      dotColor: AppColors.orangeBright.withValues(alpha: 0.2),
+                      dotColor:
+                          AppColors.orangeBright.withValues(alpha: 0.2),
                       dotHeight: 8,
                       dotWidth: 8,
                       expansionFactor: 3,
@@ -172,14 +195,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                   const SizedBox(height: 32),
 
-                  GradientButton(
-                    onPressed: _handleNext,
-                    text: isLastPage ? AppStrings.getStarted : AppStrings.next,
-                    width: double.infinity,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: GradientButton(
+                      key: ValueKey(isLastPage),
+                      onPressed: _handleNext,
+                      text: isLastPage
+                          ? AppStrings.getStarted
+                          : AppStrings.next,
+                      width: double.infinity,
+                    ),
                   ),
                 ],
               ),
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 400.ms, delay: 500.ms)
+                .slideY(begin: 0.1, end: 0),
           ],
         ),
       ),

@@ -3,10 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:hostelhop_mobile/features/auth/providers/auth_provider.dart';
 import 'package:hostelhop_mobile/screens/auth/login_screen.dart';
 import 'package:hostelhop_mobile/screens/auth/signup_screen.dart';
-import 'package:hostelhop_mobile/screens/explore/explore_screen.dart';
+import 'package:hostelhop_mobile/screens/home/home_screen.dart';
 import 'package:hostelhop_mobile/screens/home/home_shell.dart';
 import 'package:hostelhop_mobile/screens/onboarding/onboarding_screen.dart';
 import 'package:hostelhop_mobile/screens/profile/profile_screen.dart';
+import 'package:hostelhop_mobile/screens/booking/my_bookings_screen.dart';
 import 'package:hostelhop_mobile/screens/splash/splash_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,14 +21,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final isChecking = authState.status == AuthStatus.checking;
       final location = state.uri.toString();
 
-      // Handle auth redirects
       if (location == '/splash' && !isAuthenticated && !isChecking) {
-        // Still checking auth status, stay on splash
         return null;
       }
 
       if (location.startsWith('/auth/')) {
-        // Already on auth pages, no redirect needed
         return null;
       }
 
@@ -36,7 +34,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           !location.startsWith('/login') &&
           !location.startsWith('/signup') &&
           !location.startsWith('/splash')) {
-        // Not authenticated and trying to access protected route
         return '/login';
       }
 
@@ -44,7 +41,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           (location.startsWith('/login') ||
               location.startsWith('/signup') ||
               location.startsWith('/onboarding'))) {
-        // Authenticated but trying to access auth/onboarding pages
         return '/home';
       }
 
@@ -54,22 +50,36 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/splash',
         name: 'splash',
-        builder: (context, state) => const SplashScreen(),
+        pageBuilder: (context, state) => _fadeTransitionPage(
+          key: state.pageKey,
+          child: const SplashScreen(),
+          duration: const Duration(milliseconds: 600),
+        ),
       ),
       GoRoute(
         path: '/onboarding',
         name: 'onboarding',
-        builder: (context, state) => const OnboardingScreen(),
+        pageBuilder: (context, state) => _fadeTransitionPage(
+          key: state.pageKey,
+          child: const OnboardingScreen(),
+          duration: const Duration(milliseconds: 500),
+        ),
       ),
       GoRoute(
         path: '/login',
         name: 'login',
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) => _slideUpTransitionPage(
+          key: state.pageKey,
+          child: const LoginScreen(),
+        ),
       ),
       GoRoute(
         path: '/signup',
         name: 'signup',
-        builder: (context, state) => const SignupScreen(),
+        pageBuilder: (context, state) => _slideUpTransitionPage(
+          key: state.pageKey,
+          child: const SignupScreen(),
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -81,8 +91,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/home',
                 name: 'home',
-                pageBuilder: (context, state) =>
-                    NoTransitionPage(child: ExploreScreen()),
+                pageBuilder: (context, state) => _fadeTransitionPage(
+                  key: state.pageKey,
+                  child: const HomeScreen(),
+                  duration: const Duration(milliseconds: 400),
+                ),
               ),
             ],
           ),
@@ -91,8 +104,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/bookings',
                 name: 'bookings',
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: Center(child: Text('Bookings Screen')),
+                pageBuilder: (context, state) => _NoTransitionPage(
+                  key: state.pageKey,
+                  child: const MyBookingsScreen(),
                 ),
               ),
             ],
@@ -102,8 +116,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/profile',
                 name: 'profile',
-                pageBuilder: (context, state) =>
-                    NoTransitionPage(child: ProfileScreen()),
+                pageBuilder: (context, state) => _NoTransitionPage(
+                  key: state.pageKey,
+                  child: const ProfileScreen(),
+                ),
               ),
             ],
           ),
@@ -113,11 +129,61 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-// Helper class for custom page transitions
-class NoTransitionPage extends CustomTransitionPage<void> {
-  NoTransitionPage({required super.child, super.key})
-    : super(
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            child,
+// ──────────────────────────────────────
+//  Custom Page Transitions
+// ──────────────────────────────────────
+
+/// Smooth fade transition between routes.
+CustomTransitionPage<void> _fadeTransitionPage({
+  required LocalKey key,
+  required Widget child,
+  Duration duration = const Duration(milliseconds: 350),
+}) {
+  return CustomTransitionPage(
+    key: key,
+    child: child,
+    transitionDuration: duration,
+    reverseTransitionDuration: const Duration(milliseconds: 250),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+        child: child,
       );
+    },
+  );
+}
+
+/// Slide-up transition (for auth screens).
+CustomTransitionPage<void> _slideUpTransitionPage({
+  required LocalKey key,
+  required Widget child,
+}) {
+  return CustomTransitionPage(
+    key: key,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 400),
+    reverseTransitionDuration: const Duration(milliseconds: 300),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+      );
+      return SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.08),
+          end: Offset.zero,
+        ).animate(curved),
+        child: FadeTransition(opacity: curved, child: child),
+      );
+    },
+  );
+}
+
+/// No transition (for bottom nav tab switches).
+class _NoTransitionPage extends CustomTransitionPage<void> {
+  _NoTransitionPage({required super.child, super.key})
+      : super(
+          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+              child,
+        );
 }
