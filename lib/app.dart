@@ -1,36 +1,62 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:hostelhop_mobile/services/notifications_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_theme.dart';
 import 'providers/theme_provider.dart';
-import 'screens/splash/splash_screen.dart';
-import 'screens/onboarding/onboarding_screen.dart';
-import 'screens/auth/login_screen.dart';
-import 'screens/auth/signup_screen.dart';
-import 'screens/home/home_shell.dart';
+import 'core/routing/app_router.dart';
 
 /// Root application widget.
-class HostelHopApp extends StatelessWidget {
+class HostelHopApp extends ConsumerStatefulWidget {
   const HostelHopApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final themeProvider = context.watch<ThemeProvider>();
+  ConsumerState<HostelHopApp> createState() => _HostelHopAppState();
+}
 
-    return MaterialApp(
+class _HostelHopAppState extends ConsumerState<HostelHopApp> {
+  @override
+  void initState() {
+    super.initState();
+    _setupFirebaseMessaging();
+  }
+
+  void _setupFirebaseMessaging() {
+    // Request notification permissions
+    FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+
+    // Listen to Firebase messages
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        showNotification(
+          message.notification!.title ?? 'Notification',
+          message.notification!.body ?? 'You have a new notification',
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeMode = ref.watch(themeProvider);
+    final goRouter = ref.watch(goRouterProvider);
+
+    return MaterialApp.router(
       title: 'HostelHop',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: themeProvider.themeMode,
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const SplashScreen(),
-        '/onboarding': (context) => const OnboardingScreen(),
-        '/login': (context) => const LoginScreen(),
-        '/signup': (context) => const SignupScreen(),
-        '/home': (context) => const HomeShell(),
-      },
+      themeMode: themeMode,
+      routerConfig: goRouter,
     );
   }
 }

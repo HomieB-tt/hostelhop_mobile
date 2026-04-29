@@ -61,34 +61,28 @@ class HomeScreen extends StatelessWidget {
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final hostel = MockData.hostels[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: HostelCard(
-                      hostel: hostel,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                HostelDetailScreen(hostel: hostel),
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                },
-                childCount: MockData.hostels.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final hostel = MockData.hostels[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: HostelCard(
+                    hostel: hostel,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => HostelDetailScreen(hostel: hostel),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }, childCount: MockData.hostels.length),
             ),
           ),
 
           // Bottom padding
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 24),
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ],
       ),
     );

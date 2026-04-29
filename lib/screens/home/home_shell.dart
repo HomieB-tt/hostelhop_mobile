@@ -1,40 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
-import '../home/home_screen.dart';
-import '../explore/explore_screen.dart';
-import '../booking/my_bookings_screen.dart';
-import '../profile/profile_screen.dart';
 
 /// Main app shell with bottom navigation after authentication.
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key});
+  const HomeShell({super.key, required this.navigationShell});
+
+  final StatefulNavigationShell navigationShell;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _currentIndex = 0;
-
-  final _screens = const [
-    HomeScreen(),
-    ExploreScreen(),
-    MyBookingsScreen(),
-    ProfileScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: widget.navigationShell,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
@@ -55,29 +42,29 @@ class _HomeShellState extends State<HomeShell> {
                   icon: Icons.home_rounded,
                   activeIcon: Icons.home_rounded,
                   label: AppStrings.navHome,
-                  isActive: _currentIndex == 0,
-                  onTap: () => setState(() => _currentIndex = 0),
+                  isActive: widget.navigationShell.currentIndex == 0,
+                  onTap: () => widget.navigationShell.goBranch(0),
                 ),
                 _NavItem(
                   icon: Icons.explore_outlined,
                   activeIcon: Icons.explore_rounded,
                   label: AppStrings.navExplore,
-                  isActive: _currentIndex == 1,
-                  onTap: () => setState(() => _currentIndex = 1),
+                  isActive: widget.navigationShell.currentIndex == 1,
+                  onTap: () => widget.navigationShell.goBranch(1),
                 ),
                 _NavItem(
                   icon: Icons.calendar_today_outlined,
                   activeIcon: Icons.calendar_today_rounded,
                   label: AppStrings.navBookings,
-                  isActive: _currentIndex == 2,
-                  onTap: () => setState(() => _currentIndex = 2),
+                  isActive: widget.navigationShell.currentIndex == 2,
+                  onTap: () => widget.navigationShell.goBranch(2),
                 ),
                 _NavItem(
                   icon: Icons.person_outline_rounded,
                   activeIcon: Icons.person_rounded,
                   label: AppStrings.navProfile,
-                  isActive: _currentIndex == 3,
-                  onTap: () => setState(() => _currentIndex = 3),
+                  isActive: widget.navigationShell.currentIndex == 3,
+                  onTap: () => widget.navigationShell.goBranch(3),
                 ),
               ],
             ),
@@ -125,10 +112,9 @@ class _NavItem extends StatelessWidget {
               size: 24,
               color: isActive
                   ? AppColors.orangeBright
-                  : Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.45),
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.45),
             ),
             const SizedBox(height: 4),
             Text(
@@ -136,10 +122,9 @@ class _NavItem extends StatelessWidget {
               style: AppTypography.labelSmall.copyWith(
                 color: isActive
                     ? AppColors.orangeBright
-                    : Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.45),
+                    : Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.45),
                 fontSize: 11,
                 letterSpacing: 0.3,
               ),

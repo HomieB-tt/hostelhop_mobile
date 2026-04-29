@@ -131,8 +131,12 @@ class _CheckoutSheetState extends State<CheckoutSheet>
         const SizedBox(height: 8),
         Divider(color: theme.colorScheme.outline),
         const SizedBox(height: 8),
-        _DetailRow('Amount', Formatters.formatUGX(widget.amount), colors,
-            isBold: true),
+        _DetailRow(
+          'Amount',
+          Formatters.formatUGX(widget.amount),
+          colors,
+          isBold: true,
+        ),
 
         const Spacer(),
 
@@ -145,8 +149,11 @@ class _CheckoutSheetState extends State<CheckoutSheet>
           ),
           child: Row(
             children: [
-              const Icon(Icons.info_outline_rounded,
-                  size: 18, color: AppColors.warning),
+              const Icon(
+                Icons.info_outline_rounded,
+                size: 18,
+                color: AppColors.warning,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -276,8 +283,11 @@ class _CheckoutSheetState extends State<CheckoutSheet>
               color: AppColors.errorSoft,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.close_rounded,
-                size: 40, color: AppColors.error),
+            child: const Icon(
+              Icons.close_rounded,
+              size: 40,
+              color: AppColors.error,
+            ),
           ),
           const SizedBox(height: 24),
           Text(
@@ -291,8 +301,7 @@ class _CheckoutSheetState extends State<CheckoutSheet>
           ),
           const SizedBox(height: 32),
           GradientButton(
-            onPressed: () =>
-                setState(() => _state = _CheckoutState.confirm),
+            onPressed: () => setState(() => _state = _CheckoutState.confirm),
             text: 'Try Again',
             width: double.infinity,
           ),
@@ -323,13 +332,12 @@ class _DetailRow extends StatelessWidget {
           ),
           Text(
             value,
-            style: (isBold
-                    ? AppTypography.titleMedium
-                    : AppTypography.bodyMedium)
-                .copyWith(
-              color: colors.textHigh,
-              fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
-            ),
+            style:
+                (isBold ? AppTypography.titleMedium : AppTypography.bodyMedium)
+                    .copyWith(
+                      color: colors.textHigh,
+                      fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
+                    ),
           ),
         ],
       ),

@@ -167,9 +167,7 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: AppColors.textMidLight,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
 
@@ -365,9 +363,7 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: AppColors.textMidDark,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
 
@@ -411,10 +407,9 @@ class AppTheme {
   // ──────────────────────────────────────
 
   static TextTheme _buildTextTheme(TextTheme base, Color textColor) {
-    return GoogleFonts.outfitTextTheme(base).apply(
-      bodyColor: textColor,
-      displayColor: textColor,
-    );
+    return GoogleFonts.outfitTextTheme(
+      base,
+    ).apply(bodyColor: textColor, displayColor: textColor);
   }
 }
 
@@ -480,6 +475,5 @@ class HostelHopColors extends ThemeExtension<HostelHopColors> {
 
 /// Convenience extension to access [HostelHopColors] from any [BuildContext].
 extension HostelHopColorsX on BuildContext {
-  HostelHopColors get hhColors =>
-      Theme.of(this).extension<HostelHopColors>()!;
+  HostelHopColors get hhColors => Theme.of(this).extension<HostelHopColors>()!;
 }

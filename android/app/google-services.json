@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "288130347000",
+    "project_id": "mistral-hh",
+    "storage_bucket": "mistral-hh.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:288130347000:android:6eccc8feeaf9ea320b300d",
+        "android_client_info": {
+          "package_name": "org.hostel.hop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4PbaU0-UwqSZd3Ub_bZDspHP8ctuVJ5Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

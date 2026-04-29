@@ -22,7 +22,13 @@ class MockData {
       address: 'Wandegeya',
       description:
           'Modern 3-storey hostel with 24-hr security, backup generator, and rooftop study lounge. Popular with Arts and Business students.',
-      amenities: ['Fast WiFi', '24/7 Security', 'Study Room', 'Generator', 'Cleaning Service'],
+      amenities: [
+        'Fast WiFi',
+        '24/7 Security',
+        'Study Room',
+        'Generator',
+        'Cleaning Service',
+      ],
       images: [
         'https://images.unsplash.com/photo-1555854817-5b2260d50c47?q=80&w=800&auto=format&fit=crop',
       ],
@@ -38,7 +44,14 @@ class MockData {
       address: 'Kikoni Road, Wandegeya',
       description:
           'Spacious rooms with air conditioning and en-suite bathrooms. 700m from Makerere Main Gate.',
-      amenities: ['Fast WiFi', 'Air Con', '24/7 Security', 'Hot Shower', 'Study Room', 'Kitchen'],
+      amenities: [
+        'Fast WiFi',
+        'Air Con',
+        '24/7 Security',
+        'Hot Shower',
+        'Study Room',
+        'Kitchen',
+      ],
       images: [
         'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?q=80&w=800&auto=format&fit=crop',
       ],
@@ -70,7 +83,14 @@ class MockData {
       address: 'Makerere Hill Road',
       description:
           'Premium singles and doubles with en-suite bathrooms, fiber internet, and a ground-floor cafeteria.',
-      amenities: ['Fast WiFi', '24/7 Security', 'En-suite', 'Cafeteria', 'Generator', 'CCTV'],
+      amenities: [
+        'Fast WiFi',
+        '24/7 Security',
+        'En-suite',
+        'Cafeteria',
+        'Generator',
+        'CCTV',
+      ],
       images: [
         'https://images.unsplash.com/photo-1555854817-5b2260d50c47?q=80&w=800&auto=format&fit=crop',
       ],
@@ -105,7 +125,9 @@ class MockData {
         id: '$hostelId-room-$i',
         roomType: i % 3 == 0 ? 'Single' : (i % 3 == 1 ? 'Double' : 'Triple'),
         maxOccupancy: i % 3 == 0 ? 1 : (i % 3 == 1 ? 2 : 3),
-        currentOccupancy: i < available ? 0 : (i % 3 == 0 ? 1 : (i % 3 == 1 ? 2 : 3)),
+        currentOccupancy: i < available
+            ? 0
+            : (i % 3 == 0 ? 1 : (i % 3 == 1 ? 2 : 3)),
         pricePerSemester: price,
         isAvailable: i < available,
         hostelId: hostelId,

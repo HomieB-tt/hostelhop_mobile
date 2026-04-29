@@ -66,9 +66,7 @@ class _SplashScreenState extends State<SplashScreen>
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: AppColors.splashGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AppColors.splashGradient),
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: Column(

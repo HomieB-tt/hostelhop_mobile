@@ -39,8 +39,11 @@ class HostelDetailScreen extends StatelessWidget {
                         color: Colors.black.withValues(alpha: 0.3),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.arrow_back_rounded,
-                          color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                   actions: [
@@ -48,7 +51,9 @@ class HostelDetailScreen extends StatelessWidget {
                     Container(
                       margin: const EdgeInsets.only(right: 16),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.success,
                         borderRadius: BorderRadius.circular(20),
@@ -105,8 +110,11 @@ class HostelDetailScreen extends StatelessWidget {
                         // Address
                         Row(
                           children: [
-                            const Icon(Icons.location_on,
-                                size: 14, color: AppColors.orangeBright),
+                            const Icon(
+                              Icons.location_on,
+                              size: 14,
+                              color: AppColors.orangeBright,
+                            ),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
@@ -168,7 +176,9 @@ class HostelDetailScreen extends StatelessWidget {
                           children: hostel.amenities.map((a) {
                             return Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 10),
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.surface,
                                 borderRadius: BorderRadius.circular(10),
@@ -229,15 +239,17 @@ class HostelDetailScreen extends StatelessWidget {
                                       child: LinearProgressIndicator(
                                         value: hostel.totalRooms > 0
                                             ? (hostel.totalRooms -
-                                                    hostel.availableRooms) /
-                                                hostel.totalRooms
+                                                      hostel.availableRooms) /
+                                                  hostel.totalRooms
                                             : 0,
                                         backgroundColor: theme
-                                            .colorScheme.outline
+                                            .colorScheme
+                                            .outline
                                             .withValues(alpha: 0.2),
                                         valueColor:
                                             const AlwaysStoppedAnimation(
-                                                AppColors.orangeBright),
+                                              AppColors.orangeBright,
+                                            ),
                                         minHeight: 8,
                                       ),
                                     ),
@@ -274,10 +286,14 @@ class HostelDetailScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: AppColors.orangeBright.withValues(alpha: 0.06),
+                            color: AppColors.orangeBright.withValues(
+                              alpha: 0.06,
+                            ),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: AppColors.orangeBright.withValues(alpha: 0.15),
+                              color: AppColors.orangeBright.withValues(
+                                alpha: 0.15,
+                              ),
                             ),
                           ),
                           child: Column(
@@ -358,11 +374,7 @@ class HostelDetailScreen extends StatelessWidget {
     return Container(
       color: AppColors.orangeBright.withValues(alpha: 0.2),
       child: const Center(
-        child: Icon(
-          Icons.apartment_rounded,
-          size: 64,
-          color: Colors.white,
-        ),
+        child: Icon(Icons.apartment_rounded, size: 64, color: Colors.white),
       ),
     );
   }

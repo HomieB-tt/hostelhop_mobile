@@ -37,9 +37,7 @@ class Hostel {
   /// Lowest price per semester.
   int get startingPrice {
     if (rooms.isEmpty) return 0;
-    return rooms
-        .map((r) => r.pricePerSemester)
-        .reduce((a, b) => a < b ? a : b);
+    return rooms.map((r) => r.pricePerSemester).reduce((a, b) => a < b ? a : b);
   }
 
   /// Tags for display (e.g. "Selling Fast", "AC").
@@ -47,7 +45,8 @@ class Hostel {
     final t = <String>[];
     if (availableRooms <= 5 && availableRooms > 0) t.add('Selling Fast');
     if (amenities.any(
-        (a) => a.toLowerCase().contains('ac') || a.toLowerCase().contains('air'))) {
+      (a) => a.toLowerCase().contains('ac') || a.toLowerCase().contains('air'),
+    )) {
       t.add('AC');
     }
     return t;

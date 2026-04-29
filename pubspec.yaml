@@ -16,15 +16,34 @@ dependencies:
   smooth_page_indicator: ^1.2.0+3
   cached_network_image: ^3.4.1
 
-  # State
+  # State Management
   provider: ^6.1.2
+  riverpod: ^2.4.2
+  flutter_riverpod: ^2.4.2
 
-  # Backend (Phase 2 — stubbed for now)
+  # Routing
+  go_router: ^14.0.2
+
+  # Backend
   supabase_flutter: ^2.8.3
+  firebase_core: ^2.24.0
+  firebase_messaging: ^14.7.10
+
+  # Location & Maps
+  google_maps_flutter: ^2.5.0
+  google_places_flutter: ^2.0.6
+  http: ^1.1.0
+
+  # Image Handling
+  image_picker: ^1.0.0
+  flutter_image_compress: ^2.1.0
 
   # Utils
   shared_preferences: ^2.3.4
   intl: ^0.19.0
+
+  # Notifications
+  flutter_local_notifications: ^21.0.0
 
 dev_dependencies:
   flutter_test:

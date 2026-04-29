@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/utils/validators.dart';
-import '../../providers/auth_provider.dart';
+import '../../features/auth/providers/mock_auth_provider.dart';
+import '../../core/routing/app_router.dart';
 import '../../widgets/gradient_button.dart';
 
 /// Signup screen with full form, password strength meter, and T&C checkbox.
-class SignupScreen extends StatefulWidget {
+class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -46,7 +47,8 @@ class _SignupScreenState extends State<SignupScreen> {
 
   void _updateMatch() {
     setState(() {
-      _passwordsMatch = _confirmPasswordController.text.isNotEmpty &&
+      _passwordsMatch =
+          _confirmPasswordController.text.isNotEmpty &&
           _confirmPasswordController.text == _passwordController.text;
     });
   }
@@ -63,24 +65,38 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreedToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please agree to the Terms & Conditions'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please agree to the Terms & Conditions'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
       return;
     }
 
-    final auth = context.read<AuthProvider>();
-    final success = await auth.signUp(
-      fullName: _nameController.text.trim(),
-      phone: _phoneController.text.trim(),
-      password: _passwordController.text,
-    );
+    final success = await ref
+        .read(mockAuthProvider.notifier)
+        .signUp(
+          _nameController.text.trim(),
+          _phoneController.text.trim(),
+          _passwordController.text,
+        );
 
-    if (success && mounted) {
-      Navigator.pushReplacementNamed(context, '/home');
+    if (mounted) {
+      if (success) {
+        // Navigate to home using GoRouter
+        ref.read(goRouterProvider).go('/home');
+      } else {
+        // Error will be handled by the auth provider state
+        // Show error snackbar if no error message from provider
+        if (ref.read(mockAuthProvider).errorMessage == null) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Sign up failed')));
+        }
+      }
     }
   }
 
@@ -112,7 +128,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    final authState = ref.watch(mockAuthProvider);
     final colors = context.hhColors;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
@@ -168,9 +184,14 @@ class _SignupScreenState extends State<SignupScreen> {
                           validator: Validators.fullName,
                           decoration: InputDecoration(
                             hintText: AppStrings.fullNameHint,
-                            suffixIcon: _nameController.text.trim().split(' ').length >= 2
-                                ? const Icon(Icons.check_circle,
-                                    color: AppColors.success, size: 20)
+                            suffixIcon:
+                                _nameController.text.trim().split(' ').length >=
+                                    2
+                                ? const Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.success,
+                                    size: 20,
+                                  )
                                 : null,
                           ),
                           onChanged: (_) => setState(() {}),
@@ -188,12 +209,17 @@ class _SignupScreenState extends State<SignupScreen> {
                           decoration: InputDecoration(
                             hintText: AppStrings.phoneHint,
                             prefixIcon: Padding(
-                              padding: const EdgeInsets.only(left: 16, right: 8),
+                              padding: const EdgeInsets.only(
+                                left: 16,
+                                right: 8,
+                              ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Text('🇺🇬',
-                                      style: TextStyle(fontSize: 18)),
+                                  const Text(
+                                    '🇺🇬',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
                                   const SizedBox(width: 6),
                                   Text(
                                     AppStrings.phonePrefix,
@@ -205,7 +231,9 @@ class _SignupScreenState extends State<SignupScreen> {
                                   Container(
                                     width: 1,
                                     height: 24,
-                                    color: Theme.of(context).colorScheme.outline,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.outline,
                                   ),
                                 ],
                               ),
@@ -239,7 +267,8 @@ class _SignupScreenState extends State<SignupScreen> {
                             ),
                             suffixIcon: GestureDetector(
                               onTap: () => setState(
-                                  () => _obscurePassword = !_obscurePassword),
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
                               child: Padding(
                                 padding: const EdgeInsets.only(right: 12),
                                 child: Text(
@@ -297,8 +326,10 @@ class _SignupScreenState extends State<SignupScreen> {
                         TextFormField(
                           controller: _confirmPasswordController,
                           obscureText: _obscureConfirm,
-                          validator: (v) =>
-                              Validators.confirmPassword(v, _passwordController.text),
+                          validator: (v) => Validators.confirmPassword(
+                            v,
+                            _passwordController.text,
+                          ),
                           decoration: InputDecoration(
                             hintText: AppStrings.confirmPasswordHint,
                             prefixIcon: Icon(
@@ -308,7 +339,8 @@ class _SignupScreenState extends State<SignupScreen> {
                             ),
                             suffixIcon: GestureDetector(
                               onTap: () => setState(
-                                  () => _obscureConfirm = !_obscureConfirm),
+                                () => _obscureConfirm = !_obscureConfirm,
+                              ),
                               child: Padding(
                                 padding: const EdgeInsets.only(right: 12),
                                 child: Text(
@@ -365,8 +397,11 @@ class _SignupScreenState extends State<SignupScreen> {
                                   ),
                                 ),
                                 child: _agreedToTerms
-                                    ? const Icon(Icons.check,
-                                        size: 14, color: Colors.white)
+                                    ? const Icon(
+                                        Icons.check,
+                                        size: 14,
+                                        color: Colors.white,
+                                      )
                                     : null,
                               ),
                               const SizedBox(width: 12),
@@ -377,8 +412,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                       color: colors.textMid,
                                     ),
                                     children: [
-                                      const TextSpan(
-                                          text: 'I agree to the '),
+                                      const TextSpan(text: 'I agree to the '),
                                       TextSpan(
                                         text: 'Terms & Conditions',
                                         style: TextStyle(
@@ -394,8 +428,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
-                                      const TextSpan(
-                                          text: ' of HostelHop.'),
+                                      const TextSpan(text: ' of HostelHop.'),
                                     ],
                                   ),
                                 ),
@@ -408,9 +441,9 @@ class _SignupScreenState extends State<SignupScreen> {
 
                         // Create Account button
                         GradientButton(
-                          onPressed: auth.isLoading ? null : _handleSignUp,
+                          onPressed: authState.isLoading ? null : _handleSignUp,
                           text: AppStrings.signUp,
-                          isLoading: auth.isLoading,
+                          isLoading: authState.isLoading,
                           width: double.infinity,
                         ),
 
@@ -427,8 +460,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                 ),
                                 children: [
                                   const TextSpan(
-                                      text:
-                                          '${AppStrings.alreadyHaveAccount}  '),
+                                    text: '${AppStrings.alreadyHaveAccount}  ',
+                                  ),
                                   TextSpan(
                                     text: AppStrings.signIn,
                                     style: TextStyle(
@@ -470,9 +503,7 @@ class _SignupScreenState extends State<SignupScreen> {
         top: MediaQuery.of(context).padding.top + 16,
         bottom: 52,
       ),
-      decoration: const BoxDecoration(
-        gradient: AppColors.splashGradient,
-      ),
+      decoration: const BoxDecoration(gradient: AppColors.splashGradient),
       child: Column(
         children: [
           Container(

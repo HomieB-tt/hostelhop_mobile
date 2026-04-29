@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/utils/validators.dart';
-import '../../providers/auth_provider.dart';
+import '../../features/auth/providers/mock_auth_provider.dart';
+import '../../core/routing/app_router.dart';
 import '../../widgets/gradient_button.dart';
 
 /// Login screen with orange header curve and white form card.
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -33,20 +34,29 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleSignIn() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final auth = context.read<AuthProvider>();
-    final success = await auth.signIn(
-      phone: _phoneController.text.trim(),
-      password: _passwordController.text,
-    );
+    final success = await ref
+        .read(mockAuthProvider.notifier)
+        .signIn(_phoneController.text.trim(), _passwordController.text);
 
-    if (success && mounted) {
-      Navigator.pushReplacementNamed(context, '/home');
+    if (mounted) {
+      if (success) {
+        // Navigate to home using GoRouter
+        ref.read(goRouterProvider).go('/home');
+      } else {
+        // Error will be handled by the auth provider state
+        // Show error snackbar if no error message from provider
+        if (ref.read(mockAuthProvider).errorMessage == null) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Sign in failed')));
+        }
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    final authState = ref.watch(mockAuthProvider);
     final colors = context.hhColors;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
@@ -109,11 +119,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           decoration: InputDecoration(
                             hintText: AppStrings.phoneHint,
                             prefixIcon: Padding(
-                              padding: const EdgeInsets.only(left: 16, right: 8),
+                              padding: const EdgeInsets.only(
+                                left: 16,
+                                right: 8,
+                              ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Text('🇺🇬', style: TextStyle(fontSize: 18)),
+                                  const Text(
+                                    '🇺🇬',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
                                   const SizedBox(width: 6),
                                   Text(
                                     AppStrings.phonePrefix,
@@ -125,7 +141,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Container(
                                     width: 1,
                                     height: 24,
-                                    color: Theme.of(context).colorScheme.outline,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.outline,
                                   ),
                                 ],
                               ),
@@ -152,12 +170,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             hintText: AppStrings.passwordHint,
                             prefixIcon: Icon(
                               Icons.lock_outline_rounded,
-                              color: colors.textLow,
+                              color: colors.textHigh,
                               size: 20,
                             ),
                             suffixIcon: GestureDetector(
-                              onTap: () =>
-                                  setState(() => _obscurePassword = !_obscurePassword),
+                              onTap: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
                               child: Padding(
                                 padding: const EdgeInsets.only(right: 12),
                                 child: Text(
@@ -183,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               AppStrings.forgotPassword,
                               style: AppTypography.labelMedium.copyWith(
-                                color: AppColors.orangeBright,
+                                color: colors.link,
                               ),
                             ),
                           ),
@@ -192,20 +211,20 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 4),
 
                         // Error message
-                        if (auth.errorMessage != null)
+                        if (authState.errorMessage != null)
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(12),
                             margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
-                              color: AppColors.errorSoft,
+                              color: AppColors.error.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: AppColors.error.withValues(alpha: 0.3),
                               ),
                             ),
                             child: Text(
-                              auth.errorMessage!,
+                              authState.errorMessage!,
                               style: AppTypography.bodySmall.copyWith(
                                 color: AppColors.error,
                                 fontWeight: FontWeight.w600,
@@ -215,10 +234,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         // Sign In button
                         GradientButton(
-                          onPressed: auth.isLoading ? null : _handleSignIn,
+                          onPressed: authState.isLoading ? null : _handleSignIn,
                           text: AppStrings.signIn,
                           icon: Icons.login_rounded,
-                          isLoading: auth.isLoading,
+                          isLoading: authState.isLoading,
                           width: double.infinity,
                         ),
 
@@ -229,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Text(
                             AppStrings.newToHostelHop,
                             style: AppTypography.bodySmall.copyWith(
-                              color: colors.textLow,
+                              color: colors.textMid,
                             ),
                           ),
                         ),
@@ -240,13 +259,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: double.infinity,
                           child: OutlinedButton.icon(
                             onPressed: () =>
-                                Navigator.pushNamed(context, '/signup'),
-                            icon: const Icon(Icons.person_add_alt_1_rounded,
-                                size: 18),
+                                ref.read(goRouterProvider).go('/signup'),
+                            icon: const Icon(
+                              Icons.person_add_alt_1_rounded,
+                              size: 18,
+                            ),
                             label: Text(AppStrings.signUp),
                           ),
                         ),
-
                       ],
                     ),
                   ),
@@ -266,9 +286,7 @@ class _LoginScreenState extends State<LoginScreen> {
         top: MediaQuery.of(context).padding.top + 20,
         bottom: 52,
       ),
-      decoration: const BoxDecoration(
-        gradient: AppColors.splashGradient,
-      ),
+      decoration: const BoxDecoration(gradient: AppColors.splashGradient),
       child: Column(
         children: [
           // Logo placeholder

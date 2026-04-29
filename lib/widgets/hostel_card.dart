@@ -11,11 +11,7 @@ import '../data/models/models.dart';
 /// Displays hostel thumbnail, name, location, available rooms,
 /// badges (Selling Fast, AC), and starting price.
 class HostelCard extends StatelessWidget {
-  const HostelCard({
-    super.key,
-    required this.hostel,
-    this.onTap,
-  });
+  const HostelCard({super.key, required this.hostel, this.onTap});
 
   final Hostel hostel;
   final VoidCallback? onTap;
@@ -76,8 +72,11 @@ class HostelCard extends StatelessWidget {
 
                     Row(
                       children: [
-                        Icon(Icons.location_on,
-                            size: 12, color: AppColors.orangeBright),
+                        Icon(
+                          Icons.location_on,
+                          size: 12,
+                          color: AppColors.orangeBright,
+                        ),
                         const SizedBox(width: 3),
                         Expanded(
                           child: Text(
@@ -101,7 +100,9 @@ class HostelCard extends StatelessWidget {
                         // Rooms left
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.success.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
@@ -109,8 +110,11 @@ class HostelCard extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.bed_rounded,
-                                  size: 12, color: AppColors.success),
+                              Icon(
+                                Icons.bed_rounded,
+                                size: 12,
+                                color: AppColors.success,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 '${hostel.availableRooms} rooms left',
@@ -127,27 +131,31 @@ class HostelCard extends StatelessWidget {
                         const SizedBox(width: 6),
 
                         // Extra tags
-                        ...tags.map((tag) => Container(
-                              margin: const EdgeInsets.only(right: 4),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
+                        ...tags.map(
+                          (tag) => Container(
+                            margin: const EdgeInsets.only(right: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: tag == 'Selling Fast'
+                                  ? AppColors.error.withValues(alpha: 0.1)
+                                  : colors.brandSoft,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              tag,
+                              style: AppTypography.labelSmall.copyWith(
                                 color: tag == 'Selling Fast'
-                                    ? AppColors.error.withValues(alpha: 0.1)
-                                    : colors.brandSoft,
-                                borderRadius: BorderRadius.circular(6),
+                                    ? AppColors.error
+                                    : AppColors.orangeBright,
+                                fontSize: 10,
+                                letterSpacing: 0.2,
                               ),
-                              child: Text(
-                                tag,
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: tag == 'Selling Fast'
-                                      ? AppColors.error
-                                      : AppColors.orangeBright,
-                                  fontSize: 10,
-                                  letterSpacing: 0.2,
-                                ),
-                              ),
-                            )),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ],

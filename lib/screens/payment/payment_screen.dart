@@ -77,11 +77,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                   const SizedBox(height: 16),
                   _SummaryRow(
-                      label: 'Hostel', value: widget.hostel.name, colors: colors),
+                    label: 'Hostel',
+                    value: widget.hostel.name,
+                    colors: colors,
+                  ),
                   _SummaryRow(
-                      label: 'Room Type', value: 'Double', colors: colors),
+                    label: 'Room Type',
+                    value: 'Double',
+                    colors: colors,
+                  ),
                   _SummaryRow(
-                      label: 'Semester', value: 'Sem 2, 2026', colors: colors),
+                    label: 'Semester',
+                    value: 'Sem 2, 2026',
+                    colors: colors,
+                  ),
                   const Divider(height: 24),
                   _SummaryRow(
                     label: 'Total',
@@ -106,8 +115,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               name: AppStrings.mtnMobileMoney,
               color: const Color(0xFFFFD600),
               isSelected: _selectedMethod == 'MTN Mobile Money',
-              onTap: () =>
-                  setState(() => _selectedMethod = 'MTN Mobile Money'),
+              onTap: () => setState(() => _selectedMethod = 'MTN Mobile Money'),
             ),
 
             const SizedBox(height: 10),
@@ -159,17 +167,16 @@ class _SummaryRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: AppTypography.bodyMedium.copyWith(
-              color: colors.textMid,
-            ),
+            style: AppTypography.bodyMedium.copyWith(color: colors.textMid),
           ),
           Text(
             value,
-            style: (isBold ? AppTypography.titleMedium : AppTypography.bodyMedium)
-                .copyWith(
-              color: colors.textHigh,
-              fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
-            ),
+            style:
+                (isBold ? AppTypography.titleMedium : AppTypography.bodyMedium)
+                    .copyWith(
+                      color: colors.textHigh,
+                      fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
+                    ),
           ),
         ],
       ),
@@ -239,8 +246,11 @@ class _PaymentMethodTile extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              const Icon(Icons.check_circle,
-                  color: AppColors.orangeBright, size: 22),
+              const Icon(
+                Icons.check_circle,
+                color: AppColors.orangeBright,
+                size: 22,
+              ),
           ],
         ),
       ),

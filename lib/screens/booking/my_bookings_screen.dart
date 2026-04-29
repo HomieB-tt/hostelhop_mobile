@@ -37,13 +37,15 @@ class MyBookingsScreen extends StatelessWidget {
                   Text(
                     AppStrings.noBookings,
                     style: AppTypography.titleMedium.copyWith(
-                        color: colors.textMid),
+                      color: colors.textMid,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     AppStrings.noBookingsSubtitle,
-                    style:
-                        AppTypography.bodySmall.copyWith(color: colors.textLow),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: colors.textLow,
+                    ),
                   ),
                 ],
               ),
@@ -60,7 +62,8 @@ class MyBookingsScreen extends StatelessWidget {
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: Theme.of(context).colorScheme.outline),
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,34 +84,44 @@ class MyBookingsScreen extends StatelessWidget {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.bed_rounded,
-                              size: 14, color: colors.textLow),
+                          Icon(
+                            Icons.bed_rounded,
+                            size: 14,
+                            color: colors.textLow,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             '${booking.roomType} · Room ${booking.roomNumber}',
-                            style: AppTypography.bodySmall
-                                .copyWith(color: colors.textMid),
+                            style: AppTypography.bodySmall.copyWith(
+                              color: colors.textMid,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.calendar_today_rounded,
-                              size: 14, color: colors.textLow),
+                          Icon(
+                            Icons.calendar_today_rounded,
+                            size: 14,
+                            color: colors.textLow,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             '${Formatters.formatDate(booking.checkInDate)} — ${Formatters.formatDate(booking.checkOutDate)}',
-                            style: AppTypography.bodySmall
-                                .copyWith(color: colors.textMid, fontSize: 11),
+                            style: AppTypography.bodySmall.copyWith(
+                              color: colors.textMid,
+                              fontSize: 11,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Text(
                         Formatters.formatUGX(booking.amount),
-                        style: AppTypography.priceCompact
-                            .copyWith(color: colors.textHigh),
+                        style: AppTypography.priceCompact.copyWith(
+                          color: colors.textHigh,
+                        ),
                       ),
                     ],
                   ),
@@ -160,10 +173,7 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         status[0].toUpperCase() + status.substring(1),
-        style: AppTypography.labelSmall.copyWith(
-          color: fg,
-          fontSize: 10,
-        ),
+        style: AppTypography.labelSmall.copyWith(color: fg, fontSize: 10),
       ),
     );
   }

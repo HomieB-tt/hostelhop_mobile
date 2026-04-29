@@ -76,7 +76,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Text(
                     AppStrings.skip,
                     style: AppTypography.labelLarge.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -137,7 +139,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Text(
                           page.subtitle,
                           style: AppTypography.bodyLarge.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -170,9 +174,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                   GradientButton(
                     onPressed: _handleNext,
-                    text: isLastPage
-                        ? AppStrings.getStarted
-                        : AppStrings.next,
+                    text: isLastPage ? AppStrings.getStarted : AppStrings.next,
                     width: double.infinity,
                   ),
                 ],

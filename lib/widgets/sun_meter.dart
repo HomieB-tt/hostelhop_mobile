@@ -26,9 +26,7 @@ class SunMeter extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -111,8 +109,10 @@ class SunMeter extends StatelessWidget {
 
                 // Position indicator
                 Positioned(
-                  left: gaugePosition *
-                      (MediaQuery.of(context).size.width - 112), // adjusted for padding
+                  left:
+                      gaugePosition *
+                      (MediaQuery.of(context).size.width -
+                          112), // adjusted for padding
                   top: 2,
                   child: Container(
                     width: 20,

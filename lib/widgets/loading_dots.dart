@@ -37,9 +37,10 @@ class _LoadingDotsState extends State<LoadingDots>
     });
 
     _animations = _controllers.map((controller) {
-      return Tween<double>(begin: 0.0, end: -8.0).animate(
-        CurvedAnimation(parent: controller, curve: Curves.easeInOut),
-      );
+      return Tween<double>(
+        begin: 0.0,
+        end: -8.0,
+      ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
     }).toList();
 
     // Stagger the start of each dot.

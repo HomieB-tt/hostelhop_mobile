@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -9,15 +9,15 @@ import '../../data/mock/mock_data.dart';
 import '../../providers/theme_provider.dart';
 
 /// Profile screen with avatar, info, and quick links.
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.hhColors;
     final theme = Theme.of(context);
     final student = MockData.studentProfile;
-    final themeProvider = context.watch<ThemeProvider>();
+    final themeMode = ref.watch(themeProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -130,11 +130,13 @@ class ProfileScreen extends StatelessWidget {
                   // Dark mode toggle
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 4),
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     child: Row(
                       children: [
                         Icon(
-                          themeProvider.isDark
+                          themeMode == ThemeMode.dark
                               ? Icons.dark_mode_rounded
                               : Icons.light_mode_rounded,
                           size: 20,
@@ -150,8 +152,9 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         ),
                         Switch(
-                          value: themeProvider.isDark,
-                          onChanged: (_) => themeProvider.toggleTheme(),
+                          value: themeMode == ThemeMode.dark,
+                          onChanged: (_) =>
+                              ref.read(themeProvider.notifier).toggleTheme(),
                           activeThumbColor: AppColors.orangeBright,
                         ),
                       ],
@@ -234,8 +237,7 @@ class _ProfileTile extends StatelessWidget {
             Icon(
               icon,
               size: 20,
-              color:
-                  isDestructive ? AppColors.error : AppColors.orangeBright,
+              color: isDestructive ? AppColors.error : AppColors.orangeBright,
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -245,9 +247,7 @@ class _ProfileTile extends StatelessWidget {
                   Text(
                     title,
                     style: AppTypography.titleSmall.copyWith(
-                      color: isDestructive
-                          ? AppColors.error
-                          : colors.textHigh,
+                      color: isDestructive ? AppColors.error : colors.textHigh,
                     ),
                   ),
                   if (subtitle != null)
@@ -261,11 +261,7 @@ class _ProfileTile extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: colors.textLow,
-            ),
+            Icon(Icons.chevron_right_rounded, size: 20, color: colors.textLow),
           ],
         ),
       ),
