@@ -1,5 +1,4 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:hostelhop_mobile/core/constants/app_constants.dart';
 
 class SupabaseService {
   final SupabaseClient _supabase;
@@ -7,21 +6,7 @@ class SupabaseService {
   SupabaseService._internal(this._supabase);
 
   factory SupabaseService.init() {
-    final supabaseUrl = String.fromEnvironment(
-      'SUPABASE_URL',
-      defaultValue: AppConstants.supabaseUrl,
-    );
-    final supabaseAnonKey = String.fromEnvironment(
-      'SUPABASE_ANON_KEY',
-      defaultValue: AppConstants.supabaseAnonKey,
-    );
-
-    if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-      throw Exception('Supabase credentials are not configured');
-    }
-
-    final supabase = SupabaseClient(supabaseUrl, supabaseAnonKey);
-    return SupabaseService._internal(supabase);
+    return SupabaseService._internal(Supabase.instance.client);
   }
 
   SupabaseClient get client => _supabase;
@@ -39,11 +24,33 @@ class SupabaseService {
     }
   }
 
-  Future<Session?> signUpWithEmail(String email, String password) async {
+  Future<AuthResponse> signUpWithEmail(String email, String password, String fullName, String phone) async {
     try {
       final response = await _supabase.auth.signUp(
         email: email,
         password: password,
+        data: {'full_name': fullName, 'phone_number': phone},
+      );
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> signInWithPhone(String phone) async {
+    try {
+      await _supabase.auth.signInWithOtp(phone: phone);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Session?> verifyPhoneOtp(String phone, String token) async {
+    try {
+      final response = await _supabase.auth.verifyOTP(
+        type: OtpType.sms,
+        token: token,
+        phone: phone,
       );
       return response.session;
     } catch (e) {

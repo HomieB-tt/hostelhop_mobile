@@ -93,12 +93,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> signUp(String email, String password, String fullName) async {
+  Future<void> signUp(String email, String password, String fullName, String phone) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      final response = await _supabaseService.signUpWithEmail(email, password);
-      if (response != null) {
-        // TODO: Create profile in profiles table
+      final response = await _supabaseService.signUpWithEmail(email, password, fullName, phone);
+      if (response.user != null) {
         state = state.copyWith(
           status: AuthStatus.authenticated,
           user: response.user,
@@ -108,6 +107,46 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = state.copyWith(
           status: AuthStatus.unauthenticated,
           errorMessage: 'Failed to create account',
+          isLoading: false,
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        errorMessage: e.toString(),
+        isLoading: false,
+      );
+    }
+  }
+
+  Future<void> signInWithPhone(String phone) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      await _supabaseService.signInWithPhone(phone);
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        errorMessage: e.toString(),
+        isLoading: false,
+      );
+    }
+  }
+
+  Future<void> verifyPhoneOtp(String phone, String token) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final session = await _supabaseService.verifyPhoneOtp(phone, token);
+      if (session != null) {
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          user: session.user,
+          isLoading: false,
+        );
+      } else {
+        state = state.copyWith(
+          status: AuthStatus.unauthenticated,
+          errorMessage: 'Invalid OTP',
           isLoading: false,
         );
       }

@@ -6,32 +6,39 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/utils/formatters.dart';
-import '../../data/mock/mock_data.dart';
+import '../../data/providers/data_providers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class MyBookingsScreen extends StatelessWidget {
+class MyBookingsScreen extends ConsumerWidget {
   const MyBookingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.hhColors;
-    final bookings = MockData.bookings;
+    final bookingsAsync = ref.watch(myBookingsProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(AppStrings.myBookings,
             style: AppTypography.titleLarge.copyWith(color: colors.textHigh)),
       ),
-      body: bookings.isEmpty
-          ? _buildEmpty(colors)
-          : ListView.separated(
-              padding: const EdgeInsets.all(20),
-              itemCount: bookings.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final b = bookings[index];
-                return _BookingCard(booking: b, colors: colors, index: index);
-              },
-            ),
+      body: bookingsAsync.when(
+        data: (bookings) {
+          return bookings.isEmpty
+              ? _buildEmpty(colors)
+              : ListView.separated(
+                  padding: const EdgeInsets.all(20),
+                  itemCount: bookings.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final b = bookings[index];
+                    return _BookingCard(booking: b, colors: colors, index: index);
+                  },
+                );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(child: Text('Error: $error')),
+      ),
     );
   }
 

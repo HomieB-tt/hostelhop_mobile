@@ -6,17 +6,20 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
 import '../../data/mock/mock_data.dart';
+import '../../data/providers/data_providers.dart';
 import '../../widgets/sun_meter.dart';
 import '../../widgets/hostel_card.dart';
 import '../hostel_detail/hostel_detail_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Home screen with SliverPersistentHeader Sun Meter and hostel listings.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.hhColors;
+    final hostelsAsync = ref.watch(hostelsProvider);
 
     return Scaffold(
       body: CustomScrollView(
@@ -62,57 +65,65 @@ class HomeScreen extends StatelessWidget {
           ),
 
           // ── Hostel listings with staggered animation ──
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final hostel = MockData.hostels[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: HostelCard(
-                    hostel: hostel,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) =>
-                              HostelDetailScreen(hostel: hostel),
-                          transitionDuration: const Duration(milliseconds: 350),
-                          reverseTransitionDuration:
-                              const Duration(milliseconds: 250),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            final curved = CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeOutCubic,
-                            );
-                            return SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(1, 0),
-                                end: Offset.zero,
-                              ).animate(curved),
-                              child:
-                                  FadeTransition(opacity: curved, child: child),
-                            );
-                          },
+          hostelsAsync.when(
+            data: (hostels) => SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final hostel = hostels[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: HostelCard(
+                      hostel: hostel,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder: (context, animation, secondaryAnimation) =>
+                                HostelDetailScreen(hostel: hostel),
+                            transitionDuration: const Duration(milliseconds: 350),
+                            reverseTransitionDuration:
+                                const Duration(milliseconds: 250),
+                            transitionsBuilder:
+                                (context, animation, secondaryAnimation, child) {
+                              final curved = CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeOutCubic,
+                              );
+                              return SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(1, 0),
+                                  end: Offset.zero,
+                                ).animate(curved),
+                                child:
+                                    FadeTransition(opacity: curved, child: child),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    )
+                        .animate()
+                        .fadeIn(
+                          duration: 400.ms,
+                          delay: Duration(milliseconds: 300 + (index * 80)),
+                        )
+                        .slideY(
+                          begin: 0.06,
+                          end: 0,
+                          delay: Duration(milliseconds: 300 + (index * 80)),
+                          duration: 400.ms,
+                          curve: Curves.easeOutCubic,
                         ),
-                      );
-                    },
-                  )
-                      .animate()
-                      .fadeIn(
-                        duration: 400.ms,
-                        delay: Duration(milliseconds: 300 + (index * 80)),
-                      )
-                      .slideY(
-                        begin: 0.06,
-                        end: 0,
-                        delay: Duration(milliseconds: 300 + (index * 80)),
-                        duration: 400.ms,
-                        curve: Curves.easeOutCubic,
-                      ),
-                );
-              }, childCount: MockData.hostels.length),
+                  );
+                }, childCount: hostels.length),
+              ),
+            ),
+            loading: () => const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (err, stack) => SliverFillRemaining(
+              child: Center(child: Text('Error loading hostels: $err')),
             ),
           ),
 
