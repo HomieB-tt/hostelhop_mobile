@@ -18,6 +18,10 @@ class AppColors {
   /// Button gradients, focused field borders.
   static const Color orangePrimary = Color(0xFFE65100);
 
+  /// Deep brand color for gradients.
+  static const Color orangeDeep = Color(0xFFD84315);
+
+
   /// Pressed states, deep accents.
   static const Color orangeDim = Color(0xFFBF360C);
 

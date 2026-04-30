@@ -11,18 +11,40 @@ import '../../widgets/sun_meter.dart';
 import '../../widgets/hostel_card.dart';
 import '../hostel_detail/hostel_detail_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/auth/providers/auth_provider.dart';
 
 /// Home screen with SliverPersistentHeader Sun Meter and hostel listings.
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  String _searchQuery = '';
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.hhColors;
     final hostelsAsync = ref.watch(hostelsProvider);
+    final user = ref.watch(currentUserProvider);
+    final String fullName = user?.userMetadata?['full_name'] as String? ?? 'Student';
+    final String firstName = fullName.split(' ').first;
 
     return Scaffold(
-      body: CustomScrollView(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(hostelsProvider);
+        },
+        child: CustomScrollView(
         slivers: [
           // ── Collapsing header ──
           SliverPersistentHeader(
@@ -31,6 +53,13 @@ class HomeScreen extends ConsumerWidget {
               expandedHeight: 340,
               collapsedHeight: 100,
               topPadding: MediaQuery.of(context).padding.top,
+              firstName: firstName,
+              searchController: _searchController,
+              onSearchChanged: (val) {
+                setState(() {
+                  _searchQuery = val;
+                });
+              },
             ),
           ),
 
@@ -66,11 +95,29 @@ class HomeScreen extends ConsumerWidget {
 
           // ── Hostel listings with staggered animation ──
           hostelsAsync.when(
-            data: (hostels) => SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final hostel = hostels[index];
+            data: (hostels) {
+              final filteredHostels = hostels.where((h) => 
+                h.name.toLowerCase().contains(_searchQuery.toLowerCase()) || 
+                h.address.toLowerCase().contains(_searchQuery.toLowerCase())
+              ).toList();
+              
+              if (filteredHostels.isEmpty) {
+                return SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Text(
+                      'No hostels found',
+                      style: AppTypography.bodyLarge.copyWith(color: colors.textMid),
+                    ),
+                  ),
+                );
+              }
+
+              return SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final hostel = filteredHostels[index];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: HostelCard(
@@ -116,9 +163,10 @@ class HomeScreen extends ConsumerWidget {
                           curve: Curves.easeOutCubic,
                         ),
                   );
-                }, childCount: hostels.length),
+                }, childCount: filteredHostels.length),
               ),
-            ),
+            );
+            },
             loading: () => const SliverFillRemaining(
               child: Center(child: CircularProgressIndicator()),
             ),
@@ -130,6 +178,7 @@ class HomeScreen extends ConsumerWidget {
           // Bottom padding
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ],
+      ),
       ),
     );
   }
@@ -144,11 +193,24 @@ class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.expandedHeight,
     required this.collapsedHeight,
     required this.topPadding,
+    required this.firstName,
+    required this.searchController,
+    required this.onSearchChanged,
   });
 
   final double expandedHeight;
   final double collapsedHeight;
   final double topPadding;
+  final String firstName;
+  final TextEditingController searchController;
+  final Function(String) onSearchChanged;
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
 
   @override
   double get maxExtent => expandedHeight + topPadding;
@@ -190,7 +252,7 @@ class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
                 children: [
                   // Greeting
                   Text(
-                    'Good afternoon, Brian 🌞',
+                    '${_getGreeting()}, $firstName 🌞',
                     style: AppTypography.bodyMedium.copyWith(
                       color: Colors.white.withValues(alpha: 0.8),
                     ),
@@ -225,10 +287,19 @@ class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Text(
-                            AppStrings.searchHint,
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: Colors.white.withValues(alpha: 0.5),
+                          child: TextFormField(
+                            controller: searchController,
+                            onChanged: onSearchChanged,
+                            style: AppTypography.bodyMedium.copyWith(color: Colors.white),
+                            decoration: InputDecoration(
+                              hintText: AppStrings.searchHint,
+                              hintStyle: AppTypography.bodyMedium.copyWith(
+                                color: Colors.white.withValues(alpha: 0.5),
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              contentPadding: const EdgeInsets.only(bottom: 12),
                             ),
                           ),
                         ),

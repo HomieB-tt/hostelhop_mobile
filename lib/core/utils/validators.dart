@@ -22,6 +22,19 @@ class Validators {
     return '+256$digits';
   }
 
+  /// Email validation.
+  static String? email(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Email is required';
+    }
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Enter a valid email address';
+    }
+    return null;
+  }
+
+
   /// Password: min 6 chars.
   static String? password(String? value) {
     if (value == null || value.isEmpty) {

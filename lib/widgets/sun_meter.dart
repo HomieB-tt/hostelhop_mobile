@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_typography.dart';
@@ -25,145 +27,209 @@ class SunMeter extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row
+          // Header row with Pulsing Sun
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Label + location
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.sunMeterLabel,
-                    style: AppTypography.labelSmall.copyWith(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      letterSpacing: 1.5,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.wb_sunny_rounded,
+                          color: Colors.white,
+                          size: 14,
+                        )
+                            .animate(onPlay: (controller) => controller.repeat())
+                            .scaleXY(
+                              begin: 1.0,
+                              end: 1.2,
+                              duration: 1500.ms,
+                              curve: Curves.easeInOut,
+                            )
+                            .then()
+                            .scaleXY(
+                              begin: 1.2,
+                              end: 1.0,
+                              duration: 1500.ms,
+                              curve: Curves.easeInOut,
+                            ),
+                        const SizedBox(width: 6),
+                        Text(
+                          AppStrings.sunMeterLabel,
+                          style: AppTypography.labelSmall.copyWith(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            letterSpacing: 1.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  Text(
-                    location.toUpperCase(),
-                    style: AppTypography.labelMedium.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      letterSpacing: 0.5,
+                    const SizedBox(height: 2),
+                    Text(
+                      location.toUpperCase(),
+                      style: AppTypography.labelMedium.copyWith(
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
 
-              // Temperature
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Temperature Display
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
                     '$temp°C',
                     style: AppTypography.temperature.copyWith(
                       color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          offset: const Offset(0, 2),
+                          blurRadius: 4,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'feels',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: Colors.white.withValues(alpha: 0.6),
-                          fontSize: 11,
-                        ),
-                      ),
-                      Text(
-                        '$feelsLike°',
-                        style: AppTypography.titleSmall.copyWith(
-                          color: Colors.white.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'FEELS LIKE $feelsLike°',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: 10,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ],
               ),
             ],
           ),
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
 
-          // Gradient gauge bar
-          SizedBox(
-            height: 24,
-            child: Stack(
-              children: [
-                // Bar background
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: AppColors.sunMeterGradient,
-                      borderRadius: BorderRadius.circular(12),
+          // Enhanced Gradient Gauge
+          Stack(
+            alignment: Alignment.centerLeft,
+            children: [
+              // Bar background
+              Container(
+                height: 10,
+                decoration: BoxDecoration(
+                  gradient: AppColors.sunMeterGradient,
+                  borderRadius: BorderRadius.circular(5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 2,
+                      offset: const Offset(0, 1),
                     ),
-                  ),
+                  ],
                 ),
+              ),
 
-                // Position indicator
-                Positioned(
-                  left:
-                      gaugePosition *
-                      (MediaQuery.of(context).size.width -
-                          112), // adjusted for padding
-                  top: 2,
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                      border: Border.all(color: Colors.white, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
+              // Glass position indicator
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return AnimatedPositioned(
+                    duration: 1000.ms,
+                    curve: Curves.easeOutBack,
+                    left: gaugePosition * (constraints.maxWidth - 24),
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        border: Border.all(color: Colors.white, width: 2.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.orangePrimary,
+                          ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ],
-            ),
+                  );
+                },
+              ),
+            ],
           ),
 
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
 
           // Gauge labels
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _GaugeLabel('Cool (20°)', Colors.white.withValues(alpha: 0.5)),
-              _GaugeLabel('Warm (28°)', Colors.white.withValues(alpha: 0.5)),
-              _GaugeLabel('Hot (35°)', Colors.white.withValues(alpha: 0.5)),
-              _GaugeLabel('🔥 Extreme', Colors.white.withValues(alpha: 0.7)),
+              _GaugeLabel('Cool', Colors.white.withValues(alpha: 0.6)),
+              _GaugeLabel('Warm', Colors.white.withValues(alpha: 0.6)),
+              _GaugeLabel('Hot', Colors.white.withValues(alpha: 0.6)),
+              _GaugeLabel('Extreme', Colors.white.withValues(alpha: 0.9)),
             ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
-          // Tip
+          // Dynamic Tip with "Hot" warning
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              AppStrings.sunMeterTip,
-              style: AppTypography.bodySmall.copyWith(
-                color: Colors.white.withValues(alpha: 0.75),
-                fontSize: 11,
-                height: 1.4,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.05),
               ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  temp > 30 ? Icons.warning_amber_rounded : Icons.info_outline_rounded,
+                  color: Colors.white.withValues(alpha: 0.8),
+                  size: 16,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    AppStrings.sunMeterTip,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      fontSize: 11,
+                      height: 1.4,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

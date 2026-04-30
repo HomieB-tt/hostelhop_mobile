@@ -38,7 +38,7 @@ class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
-        titleTextStyle: GoogleFonts.outfit(
+        titleTextStyle: GoogleFonts.sora(
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: AppColors.textHighLight,
@@ -53,11 +53,11 @@ class AppTheme {
         unselectedItemColor: AppColors.textLowLight,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-        selectedLabelStyle: GoogleFonts.outfit(
+        selectedLabelStyle: GoogleFonts.sora(
           fontSize: 11,
           fontWeight: FontWeight.w700,
         ),
-        unselectedLabelStyle: GoogleFonts.outfit(
+        unselectedLabelStyle: GoogleFonts.sora(
           fontSize: 11,
           fontWeight: FontWeight.w500,
         ),
@@ -84,7 +84,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: GoogleFonts.outfit(
+          textStyle: GoogleFonts.sora(
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
@@ -100,7 +100,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: GoogleFonts.outfit(
+          textStyle: GoogleFonts.sora(
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
@@ -111,7 +111,7 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.orangeBright,
-          textStyle: GoogleFonts.outfit(
+          textStyle: GoogleFonts.sora(
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
@@ -145,12 +145,12 @@ class AppTheme {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.error),
         ),
-        hintStyle: GoogleFonts.outfit(
+        hintStyle: GoogleFonts.sora(
           fontSize: 14,
           fontWeight: FontWeight.w400,
           color: AppColors.textLowLight,
         ),
-        labelStyle: GoogleFonts.outfit(
+        labelStyle: GoogleFonts.sora(
           fontSize: 12,
           fontWeight: FontWeight.w700,
           color: AppColors.textMidLight,
@@ -162,7 +162,7 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceElevatedLight,
         side: const BorderSide(color: AppColors.borderLight),
-        labelStyle: GoogleFonts.outfit(
+        labelStyle: GoogleFonts.sora(
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: AppColors.textMidLight,
@@ -201,6 +201,10 @@ class AppTheme {
           brandSoft: AppColors.brandSoftLight,
           link: AppColors.blueLight,
           overlay: AppColors.overlayLight,
+          surface: AppColors.surfaceLight,
+          background: AppColors.backgroundLight,
+          border: AppColors.borderLight,
+          divider: AppColors.borderLight,
         ),
       ],
     );
@@ -234,7 +238,7 @@ class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         systemOverlayStyle: SystemUiOverlayStyle.light,
-        titleTextStyle: GoogleFonts.outfit(
+        titleTextStyle: GoogleFonts.sora(
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: AppColors.textHighDark,
@@ -249,11 +253,11 @@ class AppTheme {
         unselectedItemColor: AppColors.textLowDark,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-        selectedLabelStyle: GoogleFonts.outfit(
+        selectedLabelStyle: GoogleFonts.sora(
           fontSize: 11,
           fontWeight: FontWeight.w700,
         ),
-        unselectedLabelStyle: GoogleFonts.outfit(
+        unselectedLabelStyle: GoogleFonts.sora(
           fontSize: 11,
           fontWeight: FontWeight.w500,
         ),
@@ -280,7 +284,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: GoogleFonts.outfit(
+          textStyle: GoogleFonts.sora(
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
@@ -296,7 +300,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: GoogleFonts.outfit(
+          textStyle: GoogleFonts.sora(
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
@@ -307,7 +311,7 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.orangeBright,
-          textStyle: GoogleFonts.outfit(
+          textStyle: GoogleFonts.sora(
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
@@ -341,12 +345,12 @@ class AppTheme {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.error),
         ),
-        hintStyle: GoogleFonts.outfit(
+        hintStyle: GoogleFonts.sora(
           fontSize: 14,
           fontWeight: FontWeight.w400,
           color: AppColors.textLowDark,
         ),
-        labelStyle: GoogleFonts.outfit(
+        labelStyle: GoogleFonts.sora(
           fontSize: 12,
           fontWeight: FontWeight.w700,
           color: AppColors.textMidDark,
@@ -358,7 +362,7 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceElevatedDark,
         side: const BorderSide(color: AppColors.borderDark),
-        labelStyle: GoogleFonts.outfit(
+        labelStyle: GoogleFonts.sora(
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: AppColors.textMidDark,
@@ -397,6 +401,10 @@ class AppTheme {
           brandSoft: AppColors.brandSoftDark,
           link: AppColors.blueDark,
           overlay: AppColors.overlayDark,
+          surface: AppColors.surfaceDark,
+          background: AppColors.backgroundDark,
+          border: AppColors.borderDark,
+          divider: AppColors.borderDark,
         ),
       ],
     );
@@ -407,7 +415,7 @@ class AppTheme {
   // ──────────────────────────────────────
 
   static TextTheme _buildTextTheme(TextTheme base, Color textColor) {
-    return GoogleFonts.outfitTextTheme(
+    return GoogleFonts.soraTextTheme(
       base,
     ).apply(bodyColor: textColor, displayColor: textColor);
   }
@@ -427,6 +435,10 @@ class HostelHopColors extends ThemeExtension<HostelHopColors> {
     required this.brandSoft,
     required this.link,
     required this.overlay,
+    required this.surface,
+    required this.background,
+    required this.border,
+    required this.divider,
   });
 
   final Color textHigh;
@@ -436,6 +448,10 @@ class HostelHopColors extends ThemeExtension<HostelHopColors> {
   final Color brandSoft;
   final Color link;
   final Color overlay;
+  final Color surface;
+  final Color background;
+  final Color border;
+  final Color divider;
 
   @override
   HostelHopColors copyWith({
@@ -446,6 +462,10 @@ class HostelHopColors extends ThemeExtension<HostelHopColors> {
     Color? brandSoft,
     Color? link,
     Color? overlay,
+    Color? surface,
+    Color? background,
+    Color? border,
+    Color? divider,
   }) {
     return HostelHopColors(
       textHigh: textHigh ?? this.textHigh,
@@ -455,6 +475,10 @@ class HostelHopColors extends ThemeExtension<HostelHopColors> {
       brandSoft: brandSoft ?? this.brandSoft,
       link: link ?? this.link,
       overlay: overlay ?? this.overlay,
+      surface: surface ?? this.surface,
+      background: background ?? this.background,
+      border: border ?? this.border,
+      divider: divider ?? this.divider,
     );
   }
 
@@ -469,6 +493,10 @@ class HostelHopColors extends ThemeExtension<HostelHopColors> {
       brandSoft: Color.lerp(brandSoft, other.brandSoft, t)!,
       link: Color.lerp(link, other.link, t)!,
       overlay: Color.lerp(overlay, other.overlay, t)!,
+      surface: Color.lerp(surface, other.surface, t)!,
+      background: Color.lerp(background, other.background, t)!,
+      border: Color.lerp(border, other.border, t)!,
+      divider: Color.lerp(divider, other.divider, t)!,
     );
   }
 }

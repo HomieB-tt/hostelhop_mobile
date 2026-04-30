@@ -7,7 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/utils/validators.dart';
-import '../../features/auth/providers/mock_auth_provider.dart';
+import '../../features/auth/providers/auth_provider.dart';
 import '../../core/routing/app_router.dart';
 import '../../widgets/gradient_button.dart';
 
@@ -21,13 +21,13 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -35,255 +35,246 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _handleSignIn() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(mockAuthProvider.notifier).signIn(
-          _phoneController.text.trim(),
+    // Use actual authProvider for Supabase login
+    await ref.read(authProvider.notifier).signIn(
+          _emailController.text.trim(),
           _passwordController.text,
         );
-
-    if (success && mounted) {
-      ref.read(goRouterProvider).go('/home');
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(mockAuthProvider);
+    final authState = ref.watch(authProvider);
     final colors = context.hhColors;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
+    // Listen for auth state changes to navigate
+    ref.listen(authProvider, (previous, next) {
+      if (next.status == AuthStatus.authenticated) {
+        ref.read(goRouterProvider).go('/home');
+      }
+    });
+
     return Scaffold(
-      body: Column(
+      backgroundColor: colors.background,
+      body: Stack(
         children: [
-          // ── Orange header ──
-          _buildHeader(context),
-
-          // ── Form card ──
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(bottom: bottomInset),
-              child: Container(
-                width: double.infinity,
-                transform: Matrix4.translationValues(0, -28, 0),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(28),
-                  ),
+          // ── Orange gradient background header ──
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: MediaQuery.of(context).size.height * 0.45,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: AppColors.splashGradient,
+              ),
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 40),
+                    // Logo with glow
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            blurRadius: 20,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.wb_sunny_rounded,
+                          color: Colors.white,
+                          size: 40,
+                        ),
+                      ),
+                    )
+                        .animate(onPlay: (c) => c.repeat(reverse: true))
+                        .shimmer(duration: 2000.ms, color: Colors.white30)
+                        .scaleXY(begin: 0.95, end: 1.05, duration: 2000.ms),
+                    const SizedBox(height: 16),
+                    Text(
+                      AppStrings.appName.toUpperCase(),
+                      style: AppTypography.displayLarge.copyWith(
+                        color: Colors.white,
+                        letterSpacing: 4.0,
+                        fontSize: 28,
+                      ),
+                    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.2, end: 0),
+                    Text(
+                      AppStrings.tagline,
+                      style: AppTypography.labelSmall.copyWith(
+                        color: Colors.white70,
+                        letterSpacing: 2.0,
+                      ),
+                    ).animate().fadeIn(duration: 600.ms, delay: 200.ms),
+                  ],
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title
-                        Text(
-                          AppStrings.welcomeBack,
-                          style: AppTypography.headlineMedium.copyWith(
-                            color: colors.textHigh,
-                          ),
-                        )
-                            .animate()
-                            .fadeIn(duration: 350.ms, delay: 200.ms)
-                            .slideY(begin: 0.08, end: 0),
-                        const SizedBox(height: 4),
-                        Text(
-                          AppStrings.signInSubtitle,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: colors.textMid,
-                          ),
-                        )
-                            .animate()
-                            .fadeIn(duration: 350.ms, delay: 280.ms)
-                            .slideY(begin: 0.06, end: 0),
+              ),
+            ),
+          ),
 
-                        const SizedBox(height: 28),
+          // ── Login form card ──
+          Positioned.fill(
+            top: MediaQuery.of(context).size.height * 0.35,
+            child: Container(
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(40),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(24, 40, 24, bottomInset + 32),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppStrings.welcomeBack,
+                        style: AppTypography.headlineLarge.copyWith(
+                          color: colors.textHigh,
+                        ),
+                      ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.1, end: 0),
+                      const SizedBox(height: 8),
+                      Text(
+                        AppStrings.signInSubtitle,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: colors.textMid,
+                        ),
+                      ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
 
-                        // Phone number
-                        Text(
-                          AppStrings.phoneLabel,
-                          style: AppTypography.labelMedium.copyWith(
-                            color: colors.textMid,
-                            letterSpacing: 1.0,
-                          ),
-                        )
-                            .animate()
-                            .fadeIn(duration: 300.ms, delay: 350.ms),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _phoneController,
-                          keyboardType: TextInputType.phone,
-                          validator: Validators.phone,
-                          decoration: InputDecoration(
-                            hintText: AppStrings.phoneHint,
-                            prefixIcon: Padding(
-                              padding:
-                                  const EdgeInsets.only(left: 16, right: 8),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text('🇺🇬',
-                                      style: TextStyle(fontSize: 18)),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    AppStrings.phonePrefix,
-                                    style: AppTypography.titleSmall.copyWith(
-                                      color: colors.textHigh,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    width: 1,
-                                    height: 24,
-                                    color:
-                                        Theme.of(context).colorScheme.outline,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        )
-                            .animate()
-                            .fadeIn(duration: 350.ms, delay: 400.ms)
-                            .slideY(begin: 0.06, end: 0),
+                      const SizedBox(height: 32),
 
-                        const SizedBox(height: 20),
+                      // Email input
+                      _buildLabel(AppStrings.emailLabel, colors),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: Validators.email,
+                        decoration: InputDecoration(
+                          hintText: AppStrings.emailHint,
+                          prefixIcon: const Icon(Icons.email_outlined),
+                        ),
+                      ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
 
-                        // Password
-                        Text(
-                          AppStrings.passwordLabel,
-                          style: AppTypography.labelMedium.copyWith(
-                            color: colors.textMid,
-                            letterSpacing: 1.0,
-                          ),
-                        )
-                            .animate()
-                            .fadeIn(duration: 300.ms, delay: 460.ms),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          validator: Validators.password,
-                          decoration: InputDecoration(
-                            hintText: AppStrings.passwordHint,
-                            prefixIcon: Icon(
-                              Icons.lock_outline_rounded,
-                              color: colors.textLow,
+                      const SizedBox(height: 24),
+
+                      // Password input
+                      _buildLabel(AppStrings.passwordLabel, colors),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        validator: Validators.password,
+                        decoration: InputDecoration(
+                          hintText: AppStrings.passwordHint,
+                          prefixIcon: const Icon(Icons.lock_outline_rounded),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
                               size: 20,
                             ),
-                            suffixIcon: GestureDetector(
-                              onTap: () => setState(
-                                  () => _obscurePassword = !_obscurePassword),
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 12),
-                                child: Text(
-                                  _obscurePassword ? 'Show' : 'Hide',
-                                  style: AppTypography.labelMedium.copyWith(
-                                    color: colors.textMid,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            suffixIconConstraints: const BoxConstraints(
-                              minWidth: 0,
-                              minHeight: 0,
-                            ),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                           ),
-                        )
-                            .animate()
-                            .fadeIn(duration: 350.ms, delay: 500.ms)
-                            .slideY(begin: 0.06, end: 0),
+                        ),
+                      ).animate().fadeIn(duration: 400.ms, delay: 300.ms),
 
-                        // Forgot password
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {},
-                            child: Text(
-                              AppStrings.forgotPassword,
-                              style: AppTypography.labelMedium.copyWith(
-                                color: AppColors.orangeBright,
-                              ),
+                      // Forgot password
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {},
+                          child: Text(
+                            AppStrings.forgotPassword,
+                            style: AppTypography.labelMedium.copyWith(
+                              color: AppColors.orangeBright,
                             ),
                           ),
                         ),
+                      ),
 
-                        const SizedBox(height: 4),
+                      const SizedBox(height: 8),
 
-                        // Error message
-                        if (authState.errorMessage != null)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12),
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: AppColors.errorSoft,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: AppColors.error.withValues(alpha: 0.3),
+                      // Error message
+                      if (authState.errorMessage != null)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 24),
+                          decoration: BoxDecoration(
+                            color: AppColors.errorSoft,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 18),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  authState.errorMessage!,
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.error,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ).animate().shake(duration: 400.ms),
+
+                      // Sign In button
+                      GradientButton(
+                        onPressed: authState.isLoading ? null : _handleSignIn,
+                        text: AppStrings.signIn.toUpperCase(),
+                        icon: Icons.arrow_forward_rounded,
+                        isLoading: authState.isLoading,
+                        width: double.infinity,
+                      ).animate().fadeIn(duration: 400.ms, delay: 400.ms).slideY(begin: 0.1, end: 0),
+
+                      const SizedBox(height: 32),
+
+                      // Footer
+                      Center(
+                        child: Column(
+                          children: [
+                            Text(
+                              AppStrings.newToHostelHop,
+                              style: AppTypography.bodyMedium.copyWith(color: colors.textMid),
+                            ),
+                            TextButton(
+                              onPressed: () => ref.read(goRouterProvider).push('/signup'),
+                              child: Text(
+                                AppStrings.signUp.toUpperCase(),
+                                style: AppTypography.titleMedium.copyWith(
+                                  color: AppColors.orangeBright,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                             ),
-                            child: Text(
-                              authState.errorMessage!,
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.error,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          )
-                              .animate()
-                              .shakeX(
-                                  hz: 3,
-                                  amount: 4,
-                                  duration: 400.ms)
-                              .fadeIn(duration: 200.ms),
-
-                        // Sign In button
-                        GradientButton(
-                          onPressed:
-                              authState.isLoading ? null : _handleSignIn,
-                          text: AppStrings.signIn,
-                          icon: Icons.login_rounded,
-                          isLoading: authState.isLoading,
-                          width: double.infinity,
-                        )
-                            .animate()
-                            .fadeIn(duration: 400.ms, delay: 580.ms)
-                            .slideY(begin: 0.08, end: 0),
-
-                        const SizedBox(height: 20),
-
-                        // New to HostelHop?
-                        Center(
-                          child: Text(
-                            AppStrings.newToHostelHop,
-                            style: AppTypography.bodySmall.copyWith(
-                              color: colors.textLow,
-                            ),
-                          ),
-                        )
-                            .animate()
-                            .fadeIn(duration: 300.ms, delay: 650.ms),
-                        const SizedBox(height: 10),
-
-                        // Create Account button
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () =>
-                                ref.read(goRouterProvider).push('/signup'),
-                            icon: const Icon(
-                                Icons.person_add_alt_1_rounded,
-                                size: 18),
-                            label: Text(AppStrings.signUp),
-                          ),
-                        )
-                            .animate()
-                            .fadeIn(duration: 350.ms, delay: 700.ms)
-                            .slideY(begin: 0.06, end: 0),
-                      ],
-                    ),
+                          ],
+                        ),
+                      ).animate().fadeIn(duration: 400.ms, delay: 500.ms),
+                    ],
                   ),
                 ),
               ),
@@ -294,57 +285,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 20,
-        bottom: 52,
-      ),
-      decoration: const BoxDecoration(
-        gradient: AppColors.splashGradient,
-      ),
-      child: Column(
-        children: [
-          // Logo placeholder
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.apartment_rounded,
-              color: Colors.white,
-              size: 28,
-            ),
-          )
-              .animate()
-              .fadeIn(duration: 400.ms)
-              .scaleXY(begin: 0.8, end: 1, curve: Curves.easeOutBack),
-          const SizedBox(height: 12),
-          RichText(
-            text: TextSpan(
-              style: AppTypography.headlineSmall.copyWith(color: Colors.white),
-              children: const [
-                TextSpan(text: 'Hostel'),
-                TextSpan(
-                  text: 'Hop',
-                  style: TextStyle(color: Color(0xFFFFE0B2)),
-                ),
-              ],
-            ),
-          ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
-          const SizedBox(height: 4),
-          Text(
-            AppStrings.tagline,
-            style: AppTypography.labelSmall.copyWith(
-              color: Colors.white.withValues(alpha: 0.6),
-              letterSpacing: 2.0,
-            ),
-          ).animate().fadeIn(duration: 400.ms, delay: 180.ms),
-        ],
+  Widget _buildLabel(String text, HostelHopColors colors) {
+    return Text(
+      text,
+      style: AppTypography.labelMedium.copyWith(
+        color: colors.textMid,
+        letterSpacing: 1.2,
       ),
     );
   }

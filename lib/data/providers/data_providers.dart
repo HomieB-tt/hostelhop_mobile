@@ -6,13 +6,24 @@ import '../repositories/hostels_repository.dart';
 import '../repositories/bookings_repository.dart';
 import '../../features/auth/providers/auth_provider.dart';
 
+import '../mock/mock_data.dart';
+
 final hostelsRepositoryProvider = Provider<HostelsRepository>((ref) {
   return HostelsRepository(Supabase.instance.client);
 });
 
 final hostelsProvider = FutureProvider<List<Hostel>>((ref) async {
   final repository = ref.watch(hostelsRepositoryProvider);
-  return repository.getHostels();
+  try {
+    final hostels = await repository.getHostels();
+    if (hostels.isEmpty) {
+      return MockData.hostels;
+    }
+    return hostels;
+  } catch (e) {
+    // Fallback to mock data if there's an error (e.g. no RLS policies set up yet)
+    return MockData.hostels;
+  }
 });
 
 final bookingsRepositoryProvider = Provider<BookingsRepository>((ref) {

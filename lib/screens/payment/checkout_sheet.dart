@@ -16,13 +16,13 @@ class CheckoutSheet extends StatefulWidget {
   const CheckoutSheet({
     super.key,
     required this.hostel,
+    required this.room,
     required this.paymentMethod,
-    required this.amount,
   });
 
   final Hostel hostel;
+  final Room room;
   final String paymentMethod;
-  final int amount;
 
   @override
   State<CheckoutSheet> createState() => _CheckoutSheetState();
@@ -126,6 +126,7 @@ class _CheckoutSheetState extends State<CheckoutSheet>
 
         // Details
         _DetailRow('Hostel', widget.hostel.name, colors),
+        _DetailRow('Room', widget.room.roomType, colors),
         _DetailRow('Method', widget.paymentMethod, colors),
         _DetailRow('Phone', '+256 7XX XXX XXX', colors),
         const SizedBox(height: 8),
@@ -133,7 +134,7 @@ class _CheckoutSheetState extends State<CheckoutSheet>
         const SizedBox(height: 8),
         _DetailRow(
           'Amount',
-          Formatters.formatUGX(widget.amount),
+          Formatters.formatUGX(widget.room.pricePerSemester),
           colors,
           isBold: true,
         ),

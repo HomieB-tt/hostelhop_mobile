@@ -10,7 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTypography {
   AppTypography._();
 
-  static String get _fontFamily => GoogleFonts.outfit().fontFamily!;
+  static String get _fontFamily => GoogleFonts.sora().fontFamily!;
 
   // ──────────────────────────────────────
   //  Display
@@ -23,6 +23,15 @@ class AppTypography {
     letterSpacing: -0.5,
     height: 1.15,
   );
+
+  static TextStyle displaySmall = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 24,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.2,
+    height: 1.2,
+  );
+
 
   // ──────────────────────────────────────
   //  Headlines

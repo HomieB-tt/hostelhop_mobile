@@ -165,6 +165,7 @@ class StudentProfile {
     required this.phone,
     this.email,
     this.university,
+    this.campusId,
     this.avatarInitials,
     this.createdAt,
   });
@@ -174,6 +175,8 @@ class StudentProfile {
   final String phone;
   final String? email;
   final String? university;
+  final String? campusId;
   final String? avatarInitials;
   final DateTime? createdAt;
 }
+

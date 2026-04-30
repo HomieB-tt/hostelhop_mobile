@@ -93,10 +93,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> signUp(String email, String password, String fullName, String phone) async {
+  Future<void> signUp(String email, String password, String fullName, String phone, String campusId) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      final response = await _supabaseService.signUpWithEmail(email, password, fullName, phone);
+      final response = await _supabaseService.signUpWithEmail(email, password, fullName, phone, campusId);
       if (response.user != null) {
         state = state.copyWith(
           status: AuthStatus.authenticated,

@@ -13,6 +13,8 @@ class AppStrings {
   static const String createAccount = 'Create Account ✨';
   static const String createAccountSubtitle =
       'Join thousands of students sorted on campus';
+  static const String emailLabel = 'EMAIL ADDRESS';
+  static const String emailHint = 'Enter your email';
   static const String phoneLabel = 'PHONE NUMBER';
   static const String phoneHint = '7XX XXX XXX';
   static const String phonePrefix = '+256';
@@ -27,8 +29,6 @@ class AppStrings {
   static const String signUp = 'Create Account';
   static const String newToHostelHop = 'New to HostelHop?';
   static const String alreadyHaveAccount = 'Already have an account?';
-  static const String ownAHostel = 'Own a Hostel?';
-  static const String login = 'Login';
   static const String termsAgree =
       'I agree to the Terms & Conditions and Privacy Policy of HostelHop.';
   static const String passwordsMatch = '✓ Passwords match';

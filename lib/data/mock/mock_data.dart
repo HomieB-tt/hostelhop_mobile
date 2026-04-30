@@ -179,8 +179,26 @@ class MockData {
     ),
   ];
 
+  // ── Universities & Campuses ──
+  static const List<Map<String, dynamic>> universities = [
+    {'id': 'u-01', 'name': 'Makerere University (MUK)'},
+    {'id': 'u-02', 'name': 'Kyambogo University (KYU)'},
+    {'id': 'u-03', 'name': 'MUBS'},
+    {'id': 'u-04', 'name': 'Uganda Christian University (UCU)'},
+  ];
+
+  static const List<Map<String, dynamic>> campuses = [
+    {'id': 'c-01', 'univId': 'u-01', 'name': 'Main Campus (Wandegeya)'},
+    {'id': 'c-02', 'univId': 'u-01', 'name': 'Kikoni'},
+    {'id': 'c-03', 'univId': 'u-01', 'name': 'Kiwatule'},
+    {'id': 'c-04', 'univId': 'u-02', 'name': 'Main Campus (Banda)'},
+    {'id': 'c-05', 'univId': 'u-03', 'name': 'Nakawa'},
+    {'id': 'c-06', 'univId': 'u-04', 'name': 'Mukono Main'},
+  ];
+
   // ── Weather (hardcoded for Kampala) ──
   static const weatherTemp = 34;
   static const weatherFeelsLike = 38;
   static const weatherLocation = 'Kampala';
 }
+

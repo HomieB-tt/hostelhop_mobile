@@ -12,9 +12,10 @@ import 'checkout_sheet.dart';
 
 /// Payment screen — select method and initiate payment.
 class PaymentScreen extends StatefulWidget {
-  const PaymentScreen({super.key, required this.hostel});
+  const PaymentScreen({super.key, required this.hostel, required this.room});
 
   final Hostel hostel;
+  final Room room;
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -34,8 +35,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
       ),
       builder: (context) => CheckoutSheet(
         hostel: widget.hostel,
+        room: widget.room,
         paymentMethod: _selectedMethod,
-        amount: widget.hostel.startingPrice,
       ),
     );
   }
@@ -44,7 +45,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Widget build(BuildContext context) {
     final colors = context.hhColors;
     final theme = Theme.of(context);
-    final amount = widget.hostel.startingPrice;
+    final amount = widget.room.pricePerSemester;
 
     return Scaffold(
       appBar: AppBar(
@@ -86,7 +87,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       value: widget.hostel.name,
                       colors: colors),
                   _SummaryRow(
-                      label: 'Room Type', value: 'Double', colors: colors),
+                      label: 'Room Type', value: widget.room.roomType, colors: colors),
                   _SummaryRow(
                       label: 'Semester',
                       value: 'Sem 2, 2026',

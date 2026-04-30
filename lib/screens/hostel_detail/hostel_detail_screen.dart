@@ -11,13 +11,31 @@ import '../../widgets/gradient_button.dart';
 import '../payment/payment_screen.dart';
 
 /// Hostel detail screen showing full info, amenities, availability, and pricing.
-class HostelDetailScreen extends StatelessWidget {
+class HostelDetailScreen extends StatefulWidget {
   const HostelDetailScreen({super.key, required this.hostel});
 
   final Hostel hostel;
 
   @override
+  State<HostelDetailScreen> createState() => _HostelDetailScreenState();
+}
+
+class _HostelDetailScreenState extends State<HostelDetailScreen> {
+  Room? _selectedRoom;
+
+  @override
+  void initState() {
+    super.initState();
+    // Default select the first available room if any
+    final availableRooms = widget.hostel.rooms.where((r) => r.isAvailable).toList();
+    if (availableRooms.isNotEmpty) {
+      _selectedRoom = availableRooms.first;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final hostel = widget.hostel;
     final colors = context.hhColors;
     final theme = Theme.of(context);
 
@@ -322,55 +340,87 @@ class HostelDetailScreen extends StatelessWidget {
 
                         const SizedBox(height: 24),
 
-                        // Price card
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: AppColors.orangeBright.withValues(
-                              alpha: 0.06,
+                        // Available Rooms section
+                        if (hostel.rooms.isNotEmpty) ...[
+                          Text(
+                            AppStrings.roomsRemaining, // Or "Available Rooms" if added to AppStrings
+                            style: AppTypography.titleMedium.copyWith(
+                              color: colors.textHigh,
                             ),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: AppColors.orangeBright.withValues(
-                                alpha: 0.15,
-                              ),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.baseline,
-                                textBaseline: TextBaseline.alphabetic,
-                                children: [
-                                  Text(
-                                    Formatters.formatUGX(hostel.startingPrice),
-                                    style: AppTypography.priceTag.copyWith(
-                                      color: colors.textHigh,
-                                    ),
+                          ).animate().fadeIn(duration: 400.ms, delay: 650.ms),
+                          const SizedBox(height: 12),
+                          
+                          // Room selection list
+                          ...hostel.rooms.where((r) => r.isAvailable).map((room) {
+                            final isSelected = _selectedRoom?.id == room.id;
+                            
+                            return GestureDetector(
+                              onTap: () => setState(() => _selectedRoom = room),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppColors.orangeBright.withValues(alpha: 0.08)
+                                      : theme.colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? AppColors.orangeBright
+                                        : theme.colorScheme.outline,
+                                    width: isSelected ? 2 : 1,
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '/semester',
-                                    style: AppTypography.bodyMedium.copyWith(
-                                      color: colors.textLow,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            room.roomType,
+                                            style: AppTypography.titleSmall.copyWith(
+                                              color: colors.textHigh,
+                                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Occupancy: ${room.currentOccupancy}/${room.maxOccupancy}',
+                                            style: AppTypography.bodySmall.copyWith(
+                                              color: colors.textMid,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${AppStrings.commitmentFee}: ${Formatters.formatUGX((hostel.startingPrice * 0.65).round())}',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: colors.textMid,
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          Formatters.formatUGX(room.pricePerSemester),
+                                          style: AppTypography.titleSmall.copyWith(
+                                            color: AppColors.orangeBright,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '/semester',
+                                          style: AppTypography.bodySmall.copyWith(
+                                            color: colors.textLow,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
-                        )
-                            .animate()
-                            .fadeIn(duration: 400.ms, delay: 680.ms)
-                            .slideY(begin: 0.06, end: 0),
+                            ).animate().fadeIn(duration: 400.ms, delay: 680.ms).slideY(begin: 0.06, end: 0);
+                          }),
+                        ],
 
                         const SizedBox(height: 12),
                       ],
@@ -395,34 +445,38 @@ class HostelDetailScreen extends StatelessWidget {
             child: SafeArea(
               top: false,
               child: GradientButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) =>
-                          PaymentScreen(hostel: hostel),
-                      transitionDuration: const Duration(milliseconds: 400),
-                      reverseTransitionDuration:
-                          const Duration(milliseconds: 300),
-                      transitionsBuilder:
-                          (context, animation, secondaryAnimation, child) {
-                        final curved = CurvedAnimation(
-                          parent: animation,
-                          curve: Curves.easeOutCubic,
-                        );
-                        return SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.12),
-                            end: Offset.zero,
-                          ).animate(curved),
-                          child: FadeTransition(
-                              opacity: curved, child: child),
+                onPressed: _selectedRoom == null
+                    ? null
+                    : () {
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder: (context, animation, secondaryAnimation) =>
+                                PaymentScreen(hostel: hostel, room: _selectedRoom!),
+                            transitionDuration: const Duration(milliseconds: 400),
+                            reverseTransitionDuration:
+                                const Duration(milliseconds: 300),
+                            transitionsBuilder:
+                                (context, animation, secondaryAnimation, child) {
+                              final curved = CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeOutCubic,
+                              );
+                              return SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0, 0.12),
+                                  end: Offset.zero,
+                                ).animate(curved),
+                                child: FadeTransition(
+                                    opacity: curved, child: child),
+                              );
+                            },
+                          ),
                         );
                       },
-                    ),
-                  );
-                },
-                text: AppStrings.lockMyRoom,
+                text: _selectedRoom != null 
+                    ? '${AppStrings.lockMyRoom} — ${Formatters.formatUGX(_selectedRoom!.pricePerSemester)}'
+                    : 'Select a room',
                 width: double.infinity,
               ),
             ),

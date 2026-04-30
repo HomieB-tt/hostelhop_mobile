@@ -24,12 +24,16 @@ class SupabaseService {
     }
   }
 
-  Future<AuthResponse> signUpWithEmail(String email, String password, String fullName, String phone) async {
+  Future<AuthResponse> signUpWithEmail(String email, String password, String fullName, String phone, String campusId) async {
     try {
       final response = await _supabase.auth.signUp(
         email: email,
         password: password,
-        data: {'full_name': fullName, 'phone_number': phone},
+        data: {
+          'full_name': fullName,
+          'phone_number': phone,
+          'campus_id': campusId,
+        },
       );
       return response;
     } catch (e) {
