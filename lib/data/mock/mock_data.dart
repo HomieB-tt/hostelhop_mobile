@@ -132,6 +132,7 @@ class MockData {
         isAvailable: i < available,
         hostelId: hostelId,
         roomNumber: 'R${(i + 1).toString().padLeft(2, '0')}',
+        isUnderMaintenance: i == 5, // simulate one room under maintenance
       );
     });
   }

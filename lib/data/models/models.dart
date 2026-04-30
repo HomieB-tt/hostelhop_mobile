@@ -13,6 +13,7 @@ class Hostel {
     this.rooms = const [],
     this.distanceFromCampus,
     this.createdAt,
+    this.isOnline = true,
   });
 
   factory Hostel.fromJson(Map<String, dynamic> json) {
@@ -24,6 +25,7 @@ class Hostel {
       amenities: List<String>.from(json['amenities'] ?? []),
       images: List<String>.from(json['images'] ?? []),
       ownerId: json['owner_id'] as String,
+      isOnline: json['is_online'] as bool? ?? true,
       rooms: (json['rooms'] as List<dynamic>?)
               ?.map((e) => Room.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -44,9 +46,10 @@ class Hostel {
   final List<Room> rooms;
   final String? distanceFromCampus;
   final DateTime? createdAt;
+  final bool isOnline;
 
   /// Number of available rooms.
-  int get availableRooms => rooms.fold(0, (sum, r) => sum + (r.isAvailable ? (r.maxOccupancy - r.currentOccupancy) : 0));
+  int get availableRooms => rooms.fold(0, (sum, r) => sum + (r.isAvailable && !r.isUnderMaintenance ? (r.maxOccupancy - r.currentOccupancy) : 0));
 
   /// Total rooms.
   int get totalRooms => rooms.length;
@@ -81,6 +84,7 @@ class Room {
     required this.isAvailable,
     required this.hostelId,
     this.roomNumber = '',
+    this.isUnderMaintenance = false,
   });
 
   factory Room.fromJson(Map<String, dynamic> json) {
@@ -91,7 +95,9 @@ class Room {
       currentOccupancy: json['current_occupancy'] as int,
       pricePerSemester: (json['price_per_semester'] as num).toInt(),
       isAvailable: json['is_available'] as bool? ?? true,
+      isUnderMaintenance: json['is_under_maintenance'] as bool? ?? false,
       hostelId: json['hostel_id'] as String,
+      roomNumber: json['room_number'] as String? ?? '',
     );
   }
 
@@ -103,6 +109,7 @@ class Room {
   final bool isAvailable;
   final String hostelId;
   final String roomNumber;
+  final bool isUnderMaintenance;
 }
 
 /// Booking model.

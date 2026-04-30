@@ -27,7 +27,7 @@ class _HostelDetailScreenState extends State<HostelDetailScreen> {
   void initState() {
     super.initState();
     // Default select the first available room if any
-    final availableRooms = widget.hostel.rooms.where((r) => r.isAvailable).toList();
+    final availableRooms = widget.hostel.rooms.where((r) => r.isAvailable && !r.isUnderMaintenance).toList();
     if (availableRooms.isNotEmpty) {
       _selectedRoom = availableRooms.first;
     }
@@ -351,7 +351,7 @@ class _HostelDetailScreenState extends State<HostelDetailScreen> {
                           const SizedBox(height: 12),
                           
                           // Room selection list
-                          ...hostel.rooms.where((r) => r.isAvailable).map((room) {
+                          ...hostel.rooms.where((r) => r.isAvailable && !r.isUnderMaintenance).map((room) {
                             final isSelected = _selectedRoom?.id == room.id;
                             
                             return GestureDetector(

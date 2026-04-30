@@ -97,8 +97,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           hostelsAsync.when(
             data: (hostels) {
               final filteredHostels = hostels.where((h) => 
-                h.name.toLowerCase().contains(_searchQuery.toLowerCase()) || 
-                h.address.toLowerCase().contains(_searchQuery.toLowerCase())
+                h.isOnline && (
+                  h.name.toLowerCase().contains(_searchQuery.toLowerCase()) || 
+                  h.address.toLowerCase().contains(_searchQuery.toLowerCase())
+                )
               ).toList();
               
               if (filteredHostels.isEmpty) {
