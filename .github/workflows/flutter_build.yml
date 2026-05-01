@@ -15,7 +15,7 @@ jobs:
       # Install Flutter
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.13.2' # Updated to a Flutter release that includes Dart >= 3.11.4
+          flutter-version: 'stable' # Updated to use channel 'stable' to pick latest Flutter
           channel: 'stable'         # or 'beta', 'dev', 'master'
 
       # Install dependencies
