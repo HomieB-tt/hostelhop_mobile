@@ -1,28 +1,38 @@
 workflows:
   android-workflow:
     name: Android Build
-    max_build_duration: 60
+    max_build_duration: 120
     instance_type: mac_mini_m2
     environment:
       flutter: stable
       java: 17
       groups:
-        - keystore_credentials # Optional: Add your keystore credentials group
+        - keystore_credentials
       vars:
         PACKAGE_NAME: "org.hostel.hop"
     scripts:
       - name: Set up local.properties
         script: |
           echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Create .env file from environment variables
+        script: |
+          echo "Creating .env file from Codemagic environment variables"
+          echo "SUPABASE_URL=$SUPABASE_URL" > .env
+          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
+          echo "FIREBASE_API_KEY=$FIREBASE_API_KEY" >> .env
+          echo "FIREBASE_APP_ID=$FIREBASE_APP_ID" >> .env
+          echo "FIREBASE_MESSAGING_SENDER_ID=$FIREBASE_MESSAGING_SENDER_ID" >> .env
+          echo "FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID" >> .env
+          echo "FIREBASE_STORAGE_BUCKET=$FIREBASE_STORAGE_BUCKET" >> .env
+          cat .env
       - name: Get Flutter packages
         script: |
           flutter pub get
-      - name: Build APK (debug)
-        script: |
-          flutter build apk --debug
       - name: Build APK (release)
         script: |
-          flutter build apk --release
+          flutter build apk --release \
+            --build-name=$BUILD_NUMBER \
+            --build-number=$BUILD_NUMBER
     artifacts:
       - build/**/outputs/**/*.apk
       - build/**/outputs/**/mapping.txt
@@ -30,7 +40,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-email@example.com # Replace with your email
+          - your-email@example.com
         notify:
           success: true
           failure: true
@@ -60,7 +70,17 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-email@example.com # Replace with your email
+          - your-email@example.com
         notify:
           success: true
           failure: true
+
+env:
+  variables:
+    SUPABASE_URL: "Encrypted(...)"
+    SUPABASE_ANON_KEY: "Encrypted(...)"
+    FIREBASE_API_KEY: "Encrypted(...)"
+    FIREBASE_APP_ID: "Encrypted(...)"
+    FIREBASE_MESSAGING_SENDER_ID: "Encrypted(...)"
+    FIREBASE_PROJECT_ID: "Encrypted(...)"
+    FIREBASE_STORAGE_BUCKET: "Encrypted(...)"
