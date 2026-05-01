@@ -13,9 +13,9 @@ jobs:
       - uses: actions/checkout@v4
 
       # Install Flutter
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2.8.1
         with:
-          flutter-version: '3.19.5' # Specify your Flutter version
+          flutter-version: '3.13.2' # Updated to a Flutter release that includes Dart >= 3.11.4
           channel: 'stable'         # or 'beta', 'dev', 'master'
 
       # Install dependencies
