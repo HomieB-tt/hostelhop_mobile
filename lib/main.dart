@@ -19,49 +19,53 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // Load env
-  await dotenv.load(fileName: ".env");
+    // Load env
+    await dotenv.load(fileName: ".env");
 
-  // Initialize Firebase
-  await Firebase.initializeApp(
-    options: FirebaseOptions(
-      apiKey: String.fromEnvironment('FIREBASE_API_KEY', defaultValue: ''),
-      appId: String.fromEnvironment('FIREBASE_APP_ID', defaultValue: ''),
-      messagingSenderId: String.fromEnvironment(
-        'FIREBASE_MESSAGING_SENDER_ID',
-        defaultValue: '',
+    // Initialize Firebase
+    await Firebase.initializeApp(
+      options: FirebaseOptions(
+        apiKey: dotenv.env['FIREBASE_API_KEY'] ?? '',
+        appId: dotenv.env['FIREBASE_APP_ID'] ?? '',
+        messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+        projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+        storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'],
       ),
-      projectId: String.fromEnvironment(
-        'FIREBASE_PROJECT_ID',
-        defaultValue: '',
+    );
+
+    // Initialize Firebase Messaging
+    await FirebaseMessaging.instance.setAutoInitEnabled(true);
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+    // Initialize Supabase
+    await Supabase.initialize(
+      url: dotenv.env['SUPABASE_URL'] ?? '',
+      anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    );
+
+    // Lock to portrait orientation.
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+
+    // Initialize notifications
+    await initializeNotifications();
+
+    runApp(const ProviderScope(child: HostelHopApp()));
+  } catch (e, stackTrace) {
+    log('Initialization error: $e');
+    log('Stack trace: $stackTrace');
+    // Run a minimal error app to avoid white screen
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: SelectableText('App failed to start:\n$e'),
+        ),
       ),
-      storageBucket: String.fromEnvironment(
-        'FIREBASE_STORAGE_BUCKET',
-        defaultValue: '',
-      ),
-    ),
-  );
-
-  // Initialize Firebase Messaging
-  await FirebaseMessaging.instance.setAutoInitEnabled(true);
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-  // Initialize Supabase
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL'] ?? '',
-    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
-  );
-
-  // Lock to portrait orientation.
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
-  // Initialize notifications
-  await initializeNotifications();
-
-  runApp(const ProviderScope(child: HostelHopApp()));
+    ));
+  }
 }
