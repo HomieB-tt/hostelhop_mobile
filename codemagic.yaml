@@ -1,97 +1,66 @@
 workflows:
-  android-build:
+  android-workflow:
     name: Android Build
-    max_build_duration: 120
+    max_build_duration: 60
+    instance_type: mac_mini_m2
     environment:
       flutter: stable
-      android_signing:
-        - hostelhop-release
-    cache:
-      cache_path: ["$HOME/.pub-cache", "$FLUTTER_ROOT/.pub-cache"]
-    triggering:
-      events:
-        - push
-        - pull_request
-      branch_patterns:
-        - pattern: develop
-          include: true
-          source: true
-        - pattern: main
-          include: true
-          source: true
-        - pattern: release/*
-          include: true
-          source: true
-      cancel_previous_builds: true
+      java: 17
+      groups:
+        - keystore_credentials # Optional: Add your keystore credentials group
+      vars:
+        PACKAGE_NAME: "org.hostel.hop"
     scripts:
-      - name: Set up Flutter
+      - name: Set up local.properties
         script: |
-          flutter doctor -v
+          echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Get Flutter packages
+        script: |
           flutter pub get
-      - name: Set up Firebase
+      - name: Build APK (debug)
         script: |
-          # Firebase configuration is already present (google-services.json)
-          # Ensure Firebase CLI tools are available if needed
-          echo "Firebase configuration already in place"
-      - name: Set up .env file
+          flutter build apk --debug
+      - name: Build APK (release)
         script: |
-          # Create .env file from environment variables
-          echo "Creating .env file from Codemagic environment variables"
-          echo "SUPABASE_URL=$SUPABASE_URL" > .env
-          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
-          echo "FIREBASE_API_KEY=$FIREBASE_API_KEY" >> .env
-          echo "FIREBASE_APP_ID=$FIREBASE_APP_ID" >> .env
-          echo "FIREBASE_MESSAGING_SENDER_ID=$FIREBASE_MESSAGING_SENDER_ID" >> .env
-          echo "FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID" >> .env
-          echo "FIREBASE_STORAGE_BUCKET=$FIREBASE_STORAGE_BUCKET" >> .env
-          cat .env
-      - name: Build Android APK
-        script: |
-          flutter build apk --release \
-            --build-name=$BUILD_NUMBER \
-            --build-number=$BUILD_NUMBER \
-            --dart-define-from-file=.env
-      - name: Build Android App Bundle
-        script: |
-          flutter build appbundle --release \
-            --build-name=$BUILD_NUMBER \
-            --build-number=$BUILD_NUMBER \
-            --dart-define-from-file=.env
+          flutter build apk --release
     artifacts:
       - build/**/outputs/**/*.apk
-      - build/**/outputs/**/*.aab
-      - build/**/outputs/**/bundle.release
       - build/**/outputs/**/mapping.txt
+      - flutter_drive.log
     publishing:
-      scripts:
-        - name: Deploy to Firebase App Distribution
-          script: |
-            # Install Firebase CLI if needed
-            npm install -g firebase-tools
-            firebase appdistribution:distribute \
-              build/app/outputs/flutter-apk/app-release.apk \
-              --app $FIREBASE_APP_ID \
-              --groups testers \
-              --token $FIREBASE_TOKEN
-          skip_if: "$FIREBASE_TOKEN" == ""
+      email:
+        recipients:
+          - your-email@example.com # Replace with your email
+        notify:
+          success: true
+          failure: true
 
-env:
-  variables:
-    # Flutter configuration
-    FLUTTER_ROOT: "$HOME/programs/flutter"
-    
-    # Supabase configuration
-    SUPABASE_URL: "Encrypted(...)" # Add your Supabase URL in Codemagic UI
-    SUPABASE_ANON_KEY: "Encrypted(...)" # Add your Supabase anon key in Codemagic UI
-    
-    # Firebase configuration (optional - can also use google-services.json)
-    FIREBASE_API_KEY: "Encrypted(...)"
-    FIREBASE_APP_ID: "Encrypted(...)"
-    FIREBASE_MESSAGING_SENDER_ID: "Encrypted(...)"
-    FIREBASE_PROJECT_ID: "Encrypted(...)"
-    FIREBASE_STORAGE_BUCKET: "Encrypted(...)"
-    FIREBASE_TOKEN: "Encrypted(...)" # For Firebase App Distribution
-  
-  # Android signing - configure in Codemagic UI
-  # Go to: Team settings > Android keystore > Add keystore
-  # Then reference it as 'hostelhop-release' above
+  ios-workflow:
+    name: iOS Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios && pod install
+      - name: Build iOS (debug)
+        script: |
+          flutter build ios --debug --no-codesign
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com # Replace with your email
+        notify:
+          success: true
+          failure: true
