@@ -7,6 +7,7 @@ This repository is currently maintained as a proprietary product codebase. Contr
 ## Before You Start
 
 Before making changes:
+
 - confirm the task or feature scope with the maintainers
 - check for related product, UI, or backend assumptions
 - keep changes focused and easy to review
@@ -17,6 +18,7 @@ Before making changes:
 ### Prerequisites
 
 Install:
+
 - Flutter SDK
 - Dart SDK
 - Android Studio and/or Xcode depending on your target platform
@@ -62,6 +64,7 @@ flutter analyze
 The project currently uses Provider.
 
 When adding stateful behavior:
+
 - place shared app state in `lib/providers/`
 - keep provider responsibilities narrow and easy to test
 - avoid putting unrelated concerns into a single provider
@@ -71,6 +74,7 @@ When adding stateful behavior:
 The current version uses mock data.
 
 When changing models or mock flows:
+
 - keep domain models in `lib/data/models/`
 - keep mock data isolated under `lib/data/mock/`
 - design changes so they can transition cleanly to future Supabase-backed services
@@ -97,11 +101,13 @@ Recommended workflow:
 4. open a pull request with a clear summary
 
 Example branch names:
+
 - `feature/payment-flow-improvements`
 - `fix/login-validation`
 - `docs/readme-refresh`
 
 Example commit styles:
+
 - `feat: add hostel detail booking CTA`
 - `fix: correct theme persistence behavior`
 - `docs: improve contributor setup instructions`
@@ -120,6 +126,7 @@ Before submitting changes, make sure you:
 ## Pull Request Expectations
 
 A good pull request should include:
+
 - a concise description of what changed
 - the reason for the change
 - any relevant screenshots for UI updates
@@ -168,6 +175,7 @@ assets/screenshots/
 ## Areas That Need Extra Care
 
 Be especially careful when modifying:
+
 - authentication flows
 - payment-related screens and messaging
 - shared theme definitions
@@ -177,6 +185,7 @@ Be especially careful when modifying:
 ## Code Review Guidance
 
 Reviewers will generally look for:
+
 - product clarity
 - UI consistency
 - maintainable structure
@@ -186,6 +195,7 @@ Reviewers will generally look for:
 ## Security and Confidentiality
 
 Because this is a proprietary repository:
+
 - do not publish code, screenshots, or internal product details externally without permission
 - do not add secrets, tokens, or credentials to source control
 - use environment-specific configuration for sensitive values when backend integration is added
