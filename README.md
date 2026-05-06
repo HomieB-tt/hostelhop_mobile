@@ -15,7 +15,7 @@ HostelHop is a modern mobile application designed to streamline the student acco
 
 | Splash & Branding | Authentication | Discover Hostels |
 | :---: | :---: | :---: |
-| <img src="screenshots/mobile/Screenshot_20260422_053834.jpeg" width="250"> | <img src="screenshots/mobile/Screenshot_20260422_053855.jpeg" width="250"> | <img src="screenshots/mobile/Screenshot_20260422_053953.jpeg" width="250"> |
+| ![Splash](screenshots/mobile/Screenshot_20260422_053834.jpeg) | ![Auth](screenshots/mobile/Screenshot_20260422_053855.jpeg) | ![Discover](screenshots/mobile/Screenshot_20260422_053953.jpeg) |
 | *Visual identity & splash* | *Local auth flows (Uganda)* | *Real-time hostel listings* |
 
 ---
@@ -71,20 +71,24 @@ lib/
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd hostelhop_mobile
    ```
 
 2. **Install dependencies**
+
    ```bash
    flutter pub get
    ```
 
 3. **Configure Environment**
+
    Create a `.env` file in the root directory (refer to `.env.example` if available) with your Supabase and API credentials.
 
 4. **Run the application**
+
    ```bash
    flutter run
    ```
