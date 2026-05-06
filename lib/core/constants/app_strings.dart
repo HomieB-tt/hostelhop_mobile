@@ -101,8 +101,9 @@ class AppStrings {
   // ── Bottom Nav ──
   static const String navHome = 'Home';
   static const String navExplore = 'Explore';
+  static const String navSearch = 'Search';
   static const String navBookings = 'Bookings';
-  static const String navProfile = 'Profile';
+  static const String navSettings = 'Settings';
 
   // ── Sun Meter tip ──
   static const String sunMeterTip =

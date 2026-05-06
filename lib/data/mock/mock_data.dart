@@ -10,6 +10,7 @@ class MockData {
     fullName: 'Brian Sserwadda',
     phone: '+256 772 345 012',
     email: 'brian.s@students.mak.ac.ug',
+    studentNumber: '2100704321',
     university: 'Makerere University',
     avatarInitials: 'BS',
   );
@@ -186,6 +187,9 @@ class MockData {
     {'id': 'u-02', 'name': 'Kyambogo University (KYU)'},
     {'id': 'u-03', 'name': 'MUBS'},
     {'id': 'u-04', 'name': 'Uganda Christian University (UCU)'},
+    {'id': 'u-05', 'name': 'Kampala International University (KIU)'},
+    {'id': 'u-06', 'name': 'Cavendish University'},
+    {'id': 'u-07', 'name': 'Ndejje University'},
   ];
 
   static const List<Map<String, dynamic>> campuses = [
@@ -195,6 +199,9 @@ class MockData {
     {'id': 'c-04', 'univId': 'u-02', 'name': 'Main Campus (Banda)'},
     {'id': 'c-05', 'univId': 'u-03', 'name': 'Nakawa'},
     {'id': 'c-06', 'univId': 'u-04', 'name': 'Mukono Main'},
+    {'id': 'c-07', 'univId': 'u-05', 'name': 'Kansanga'},
+    {'id': 'c-08', 'univId': 'u-06', 'name': 'Nsambya'},
+    {'id': 'c-09', 'univId': 'u-07', 'name': 'Kampala Campus'},
   ];
 
   // ── Weather (hardcoded for Kampala) ──

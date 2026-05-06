@@ -7,6 +7,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/models/models.dart';
+import '../../data/mock/mock_data.dart';
 import '../../widgets/gradient_button.dart';
 import 'checkout_sheet.dart';
 
@@ -23,8 +24,60 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen> {
   String _selectedMethod = 'MTN Mobile Money';
+  final TextEditingController _phoneController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _phoneController.addListener(_onPhoneChanged);
+    // Pre-fill with user's phone if available
+    _phoneController.text = MockData.studentProfile.phone;
+  }
+
+  @override
+  void dispose() {
+    _phoneController.removeListener(_onPhoneChanged);
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  void _onPhoneChanged() {
+    final text = _phoneController.text.replaceAll(' ', '');
+    // Auto-detect logic
+    // MTN: 077, 078, 076, 079
+    // Airtel: 070, 075, 074
+    
+    // Normalize to handle +256
+    String normalized = text;
+    if (normalized.startsWith('+256')) {
+      normalized = '0${normalized.substring(4)}';
+    } else if (normalized.startsWith('256')) {
+      normalized = '0${normalized.substring(3)}';
+    }
+
+    if (normalized.length >= 3) {
+      final prefix = normalized.substring(0, 3);
+      if (['077', '078', '076', '079'].contains(prefix)) {
+        if (_selectedMethod != 'MTN Mobile Money') {
+          setState(() => _selectedMethod = 'MTN Mobile Money');
+        }
+      } else if (['070', '075', '074'].contains(prefix)) {
+        if (_selectedMethod != 'Airtel Money') {
+          setState(() => _selectedMethod = 'Airtel Money');
+        }
+      }
+    }
+  }
 
   void _showCheckout() {
+    // Validate phone
+    if (_phoneController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a phone number')),
+      );
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -37,6 +90,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         hostel: widget.hostel,
         room: widget.room,
         paymentMethod: _selectedMethod,
+        phoneNumber: _phoneController.text,
       ),
     );
   }
@@ -58,104 +112,148 @@ class _PaymentScreenState extends State<PaymentScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Summary card ──
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: theme.colorScheme.outline),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.bookingSummary,
-                    style: AppTypography.labelMedium.copyWith(
-                      color: colors.textLow,
-                      letterSpacing: 1.0,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Summary card ──
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: theme.colorScheme.outline),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.bookingSummary,
+                      style: AppTypography.labelMedium.copyWith(
+                        color: colors.textLow,
+                        letterSpacing: 1.0,
+                      ),
                     ),
+                    const SizedBox(height: 16),
+                    _SummaryRow(
+                        label: 'Hostel',
+                        value: widget.hostel.name,
+                        colors: colors),
+                    _SummaryRow(
+                        label: 'Room Type', value: widget.room.roomType, colors: colors),
+                    _SummaryRow(
+                        label: 'Semester',
+                        value: 'Sem 2, 2026',
+                        colors: colors),
+                    const Divider(height: 24),
+                    _SummaryRow(
+                      label: 'Total',
+                      value: Formatters.formatUGX(amount),
+                      colors: colors,
+                      isBold: true,
+                    ),
+                  ],
+                ),
+              )
+                  .animate()
+                  .fadeIn(duration: 400.ms, delay: 100.ms)
+                  .slideY(begin: 0.06, end: 0),
+  
+              const SizedBox(height: 24),
+  
+              // ── Phone Number Input ──
+              Text(
+                'Mobile Money Number',
+                style: AppTypography.titleMedium.copyWith(color: colors.textHigh),
+              )
+                  .animate()
+                  .fadeIn(duration: 350.ms, delay: 250.ms),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                style: AppTypography.bodyMedium.copyWith(color: colors.textHigh),
+                decoration: InputDecoration(
+                  hintText: '+256 7...',
+                  prefixIcon: Icon(Icons.phone_android_rounded, color: colors.textMid),
+                  filled: true,
+                  fillColor: colors.surfaceElevated,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: colors.border),
                   ),
-                  const SizedBox(height: 16),
-                  _SummaryRow(
-                      label: 'Hostel',
-                      value: widget.hostel.name,
-                      colors: colors),
-                  _SummaryRow(
-                      label: 'Room Type', value: widget.room.roomType, colors: colors),
-                  _SummaryRow(
-                      label: 'Semester',
-                      value: 'Sem 2, 2026',
-                      colors: colors),
-                  const Divider(height: 24),
-                  _SummaryRow(
-                    label: 'Total',
-                    value: Formatters.formatUGX(amount),
-                    colors: colors,
-                    isBold: true,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: colors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: AppColors.orangeBright),
+                  ),
+                ),
+              )
+                  .animate()
+                  .fadeIn(duration: 350.ms, delay: 280.ms),
+  
+              const SizedBox(height: 24),
+  
+              // ── Payment method ──
+              Text(
+                AppStrings.paymentMethod,
+                style:
+                    AppTypography.titleMedium.copyWith(color: colors.textHigh),
+              )
+                  .animate()
+                  .fadeIn(duration: 350.ms, delay: 320.ms),
+              const SizedBox(height: 12),
+  
+              Row(
+                children: [
+                  Expanded(
+                    child: _PaymentMethodTile(
+                      name: AppStrings.mtnMobileMoney,
+                      color: const Color(0xFFFFD600),
+                      isSelected: _selectedMethod == 'MTN Mobile Money',
+                      onTap: () =>
+                          setState(() => _selectedMethod = 'MTN Mobile Money'),
+                    )
+                        .animate()
+                        .fadeIn(duration: 350.ms, delay: 380.ms)
+                        .slideX(begin: -0.04, end: 0),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _PaymentMethodTile(
+                      name: AppStrings.airtelMoney,
+                      color: const Color(0xFFFF0000),
+                      isSelected: _selectedMethod == 'Airtel Money',
+                      onTap: () => setState(() => _selectedMethod = 'Airtel Money'),
+                    )
+                        .animate()
+                        .fadeIn(duration: 350.ms, delay: 420.ms)
+                        .slideX(begin: 0.04, end: 0),
                   ),
                 ],
               ),
-            )
-                .animate()
-                .fadeIn(duration: 400.ms, delay: 100.ms)
-                .slideY(begin: 0.06, end: 0),
-
-            const SizedBox(height: 24),
-
-            // ── Payment method ──
-            Text(
-              AppStrings.paymentMethod,
-              style:
-                  AppTypography.titleMedium.copyWith(color: colors.textHigh),
-            )
-                .animate()
-                .fadeIn(duration: 350.ms, delay: 250.ms),
-            const SizedBox(height: 12),
-
-            _PaymentMethodTile(
-              name: AppStrings.mtnMobileMoney,
-              color: const Color(0xFFFFD600),
-              isSelected: _selectedMethod == 'MTN Mobile Money',
-              onTap: () =>
-                  setState(() => _selectedMethod = 'MTN Mobile Money'),
-            )
-                .animate()
-                .fadeIn(duration: 350.ms, delay: 320.ms)
-                .slideX(begin: -0.04, end: 0),
-
-            const SizedBox(height: 10),
-
-            _PaymentMethodTile(
-              name: AppStrings.airtelMoney,
-              color: const Color(0xFFFF0000),
-              isSelected: _selectedMethod == 'Airtel Money',
-              onTap: () => setState(() => _selectedMethod = 'Airtel Money'),
-            )
-                .animate()
-                .fadeIn(duration: 350.ms, delay: 400.ms)
-                .slideX(begin: -0.04, end: 0),
-
-            const Spacer(),
-
-            // ── Pay Now ──
-            GradientButton(
-              onPressed: _showCheckout,
-              text: '${AppStrings.payNow} — ${Formatters.formatUGX(amount)}',
-              width: double.infinity,
-              icon: Icons.lock_rounded,
-            )
-                .animate()
-                .fadeIn(duration: 400.ms, delay: 500.ms)
-                .slideY(begin: 0.1, end: 0),
-
-            const SizedBox(height: 16),
-          ],
+  
+              const SizedBox(height: 40),
+  
+              // ── Pay Now ──
+              GradientButton(
+                onPressed: _showCheckout,
+                text: '${AppStrings.payNow} — ${Formatters.formatUGX(amount)}',
+                width: double.infinity,
+                icon: Icons.lock_rounded,
+              )
+                  .animate()
+                  .fadeIn(duration: 400.ms, delay: 500.ms)
+                  .slideY(begin: 0.1, end: 0),
+  
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -267,13 +365,16 @@ class _PaymentMethodTile extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 name,
                 style: AppTypography.titleSmall.copyWith(
                   color: theme.colorScheme.onSurface,
+                  fontSize: 13,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             AnimatedSwitcher(

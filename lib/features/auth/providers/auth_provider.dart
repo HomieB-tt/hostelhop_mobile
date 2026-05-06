@@ -35,17 +35,16 @@ class AuthState {
 }
 
 // Auth notifier using Riverpod
-class AuthNotifier extends StateNotifier<AuthState> {
-  final SupabaseService _supabaseService;
-
-  AuthNotifier(this._supabaseService)
-    : super(const AuthState(status: AuthStatus.checking)) {
+class AuthNotifier extends Notifier<AuthState> {
+  @override
+  AuthState build() {
     _checkAuthStatus();
+    return const AuthState(status: AuthStatus.checking);
   }
 
   Future<void> _checkAuthStatus() async {
     try {
-      final user = await _supabaseService.getCurrentUser();
+      final user = await ref.read(supabaseServiceProvider).getCurrentUser();
       if (user != null) {
         state = state.copyWith(
           status: AuthStatus.authenticated,
@@ -70,7 +69,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> signIn(String email, String password) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      final response = await _supabaseService.signInWithEmail(email, password);
+      final response = await ref.read(supabaseServiceProvider).signInWithEmail(email, password);
       if (response != null) {
         state = state.copyWith(
           status: AuthStatus.authenticated,
@@ -96,7 +95,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> signUp(String email, String password, String fullName, String phone, String campusId) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      final response = await _supabaseService.signUpWithEmail(email, password, fullName, phone, campusId);
+      final response = await ref.read(supabaseServiceProvider).signUpWithEmail(email, password, fullName, phone, campusId);
       if (response.user != null) {
         state = state.copyWith(
           status: AuthStatus.authenticated,
@@ -122,7 +121,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> signInWithPhone(String phone) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      await _supabaseService.signInWithPhone(phone);
+      await ref.read(supabaseServiceProvider).signInWithPhone(phone);
       state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(
@@ -136,7 +135,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> verifyPhoneOtp(String phone, String token) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      final session = await _supabaseService.verifyPhoneOtp(phone, token);
+      final session = await ref.read(supabaseServiceProvider).verifyPhoneOtp(phone, token);
       if (session != null) {
         state = state.copyWith(
           status: AuthStatus.authenticated,
@@ -162,7 +161,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> signOut() async {
     state = state.copyWith(isLoading: true);
     try {
-      await _supabaseService.signOut();
+      await ref.read(supabaseServiceProvider).signOut();
       state = const AuthState(status: AuthStatus.unauthenticated);
     } catch (e) {
       state = state.copyWith(errorMessage: e.toString(), isLoading: false);
@@ -176,10 +175,7 @@ final supabaseServiceProvider = Provider<SupabaseService>((ref) {
 });
 
 // Provider for AuthNotifier
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final supabaseService = ref.watch(supabaseServiceProvider);
-  return AuthNotifier(supabaseService);
-});
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
 
 // Provider for accessing auth state
 final authStateProvider = Provider<AuthState>((ref) {

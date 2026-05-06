@@ -6,9 +6,11 @@ import 'package:hostelhop_mobile/screens/auth/signup_screen.dart';
 import 'package:hostelhop_mobile/screens/home/home_screen.dart';
 import 'package:hostelhop_mobile/screens/home/home_shell.dart';
 import 'package:hostelhop_mobile/screens/onboarding/onboarding_screen.dart';
-import 'package:hostelhop_mobile/screens/profile/profile_screen.dart';
+import 'package:hostelhop_mobile/screens/profile/settings_screen.dart';
 import 'package:hostelhop_mobile/screens/booking/my_bookings_screen.dart';
 import 'package:hostelhop_mobile/screens/splash/splash_screen.dart';
+import 'package:hostelhop_mobile/screens/search/search_screen.dart';
+import 'package:hostelhop_mobile/screens/profile/edit_profile_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -102,6 +104,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: '/search',
+                name: 'search',
+                pageBuilder: (context, state) => _NoTransitionPage(
+                  key: state.pageKey,
+                  child: const SearchScreen(),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
                 path: '/bookings',
                 name: 'bookings',
                 pageBuilder: (context, state) => _NoTransitionPage(
@@ -114,12 +128,21 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/profile',
-                name: 'profile',
+                path: '/settings',
+                name: 'settings',
                 pageBuilder: (context, state) => _NoTransitionPage(
                   key: state.pageKey,
-                  child: const ProfileScreen(),
+                  child: const SettingsScreen(),
                 ),
+                routes: [
+                  GoRoute(
+                    path: 'edit-profile',
+                    name: 'edit-profile',
+                    pageBuilder: (context, state) => const MaterialPage(
+                      child: EditProfileScreen(),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

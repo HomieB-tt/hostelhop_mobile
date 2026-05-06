@@ -34,9 +34,11 @@ class AuthState {
 }
 
 // Mock Auth notifier using Riverpod (uses mock data instead of Supabase)
-class MockAuthNotifier extends StateNotifier<AuthState> {
-  MockAuthNotifier() : super(const AuthState(status: AuthStatus.checking)) {
+class MockAuthNotifier extends Notifier<AuthState> {
+  @override
+  AuthState build() {
     _checkAuthStatus();
+    return const AuthState(status: AuthStatus.checking);
   }
 
   Future<void> _checkAuthStatus() async {
@@ -117,11 +119,7 @@ class MockAuthNotifier extends StateNotifier<AuthState> {
 }
 
 // Provider for MockAuthNotifier
-final mockAuthProvider = StateNotifierProvider<MockAuthNotifier, AuthState>((
-  ref,
-) {
-  return MockAuthNotifier();
-});
+final mockAuthProvider = NotifierProvider<MockAuthNotifier, AuthState>(MockAuthNotifier.new);
 
 // Provider for accessing auth state
 final mockAuthStateProvider = Provider<AuthState>((ref) {

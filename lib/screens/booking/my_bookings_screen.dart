@@ -37,7 +37,36 @@ class MyBookingsScreen extends ConsumerWidget {
                 );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error')),
+        error: (error, stack) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.cloud_off_rounded, size: 56,
+                    color: colors.textLow.withValues(alpha: 0.4))
+                    .animate().fadeIn(duration: 400.ms)
+                    .scaleXY(begin: 0.8, end: 1, curve: Curves.easeOutBack),
+                const SizedBox(height: 16),
+                Text('Couldn\'t load bookings',
+                    style: AppTypography.titleMedium.copyWith(color: colors.textMid))
+                    .animate().fadeIn(duration: 350.ms, delay: 100.ms),
+                const SizedBox(height: 8),
+                Text('Pull down to refresh or try again later',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodySmall.copyWith(color: colors.textLow))
+                    .animate().fadeIn(duration: 350.ms, delay: 200.ms),
+                const SizedBox(height: 24),
+                TextButton.icon(
+                  onPressed: () => ref.invalidate(myBookingsProvider),
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Retry'),
+                  style: TextButton.styleFrom(foregroundColor: AppColors.orangeBright),
+                ).animate().fadeIn(duration: 350.ms, delay: 300.ms),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -96,7 +125,10 @@ class _BookingCard extends StatelessWidget {
           Row(children: [
             Icon(Icons.bed_rounded, size: 14, color: colors.textLow),
             const SizedBox(width: 6),
-            Text('${booking.roomType} · Room ${booking.roomNumber}',
+            Text(
+                booking.roomNumber.isNotEmpty
+                    ? '${booking.roomType} · Room ${booking.roomNumber}'
+                    : booking.roomType,
                 style: AppTypography.bodySmall.copyWith(color: colors.textMid)),
           ]),
           const SizedBox(height: 4),

@@ -7,30 +7,34 @@ import '../../core/constants/app_strings.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/models/models.dart';
 import '../../widgets/gradient_button.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/pesapal_provider.dart';
 
 /// Half-screen checkout bottom sheet.
 ///
 /// Slides up, user confirms details, taps Pay Now,
 /// loading state → success/failure state.
-class CheckoutSheet extends StatefulWidget {
+class CheckoutSheet extends ConsumerStatefulWidget {
   const CheckoutSheet({
     super.key,
     required this.hostel,
     required this.room,
     required this.paymentMethod,
+    required this.phoneNumber,
   });
 
   final Hostel hostel;
   final Room room;
   final String paymentMethod;
+  final String phoneNumber;
 
   @override
-  State<CheckoutSheet> createState() => _CheckoutSheetState();
+  ConsumerState<CheckoutSheet> createState() => _CheckoutSheetState();
 }
 
 enum _CheckoutState { confirm, processing, success, failed }
 
-class _CheckoutSheetState extends State<CheckoutSheet>
+class _CheckoutSheetState extends ConsumerState<CheckoutSheet>
     with SingleTickerProviderStateMixin {
   _CheckoutState _state = _CheckoutState.confirm;
   late final AnimationController _checkController;
@@ -53,12 +57,81 @@ class _CheckoutSheetState extends State<CheckoutSheet>
   Future<void> _processPayment() async {
     setState(() => _state = _CheckoutState.processing);
 
-    // Simulate payment processing.
-    await Future.delayed(const Duration(milliseconds: 2500));
+    final pesapal = ref.read(pesapalServiceProvider);
+    
+    // 1. Get Access Token
+    final token = await pesapal.getAccessToken();
+    if (token == null) {
+      if (mounted) setState(() => _state = _CheckoutState.failed);
+      return;
+    }
 
-    if (mounted) {
+    // 2. Register IPN
+    final ipnId = await pesapal.registerIpn(token, 'https://hostelhop.ug/ipn');
+    if (ipnId == null) {
+      if (mounted) setState(() => _state = _CheckoutState.failed);
+      return;
+    }
+
+    // 3. Submit Order
+    final orderId = 'HH-${DateTime.now().millisecondsSinceEpoch}';
+    final amount = widget.room.pricePerSemester.toDouble();
+    
+    // Attempting to split the student's name if we had it, but we can default to Student for now.
+    final firstName = 'HostelHop';
+    final lastName = 'Student';
+
+    final orderResponse = await pesapal.submitOrder(
+      token: token,
+      ipnId: ipnId,
+      orderId: orderId,
+      amount: amount,
+      description: 'Hostel booking: ${widget.room.roomType}',
+      email: 'student@hostelhop.ug',
+      phoneNumber: widget.phoneNumber,
+      firstName: firstName,
+      lastName: lastName,
+    );
+
+    if (orderResponse == null || orderResponse['order_tracking_id'] == null) {
+      if (mounted) setState(() => _state = _CheckoutState.failed);
+      return;
+    }
+
+    final trackingId = orderResponse['order_tracking_id'] as String;
+
+    // 4. Poll for transaction status
+    bool isCompleted = false;
+
+    
+    // Poll for up to 60 * 3 seconds = 3 minutes
+    for (int i = 0; i < 60; i++) { 
+      await Future.delayed(const Duration(seconds: 3));
+      
+      if (!mounted) return;
+
+      final statusData = await pesapal.getTransactionStatus(token, trackingId);
+      if (statusData != null) {
+        final statusCode = statusData['payment_status_description']?.toString().toUpperCase() ?? '';
+        // PesaPal statuses: COMPLETED, FAILED, INVALID, PENDING
+        
+        if (statusCode == 'COMPLETED') {
+          isCompleted = true;
+          break;
+        } else if (statusCode == 'FAILED' || statusCode == 'INVALID') {
+
+          break;
+        }
+      }
+    }
+
+    if (!mounted) return;
+
+    if (isCompleted) {
       setState(() => _state = _CheckoutState.success);
       _checkController.forward();
+    } else {
+      setState(() => _state = _CheckoutState.failed);
     }
   }
 
@@ -128,7 +201,7 @@ class _CheckoutSheetState extends State<CheckoutSheet>
         _DetailRow('Hostel', widget.hostel.name, colors),
         _DetailRow('Room', widget.room.roomType, colors),
         _DetailRow('Method', widget.paymentMethod, colors),
-        _DetailRow('Phone', '+256 7XX XXX XXX', colors),
+        _DetailRow('Phone', widget.phoneNumber, colors),
         const SizedBox(height: 8),
         Divider(color: theme.colorScheme.outline),
         const SizedBox(height: 8),

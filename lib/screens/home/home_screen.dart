@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -12,6 +13,8 @@ import '../../widgets/hostel_card.dart';
 import '../hostel_detail/hostel_detail_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../../providers/weather_provider.dart';
+import '../../data/models/models.dart';
 
 /// Home screen with SliverPersistentHeader Sun Meter and hostel listings.
 class HomeScreen extends ConsumerStatefulWidget {
@@ -36,6 +39,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final colors = context.hhColors;
     final hostelsAsync = ref.watch(hostelsProvider);
     final user = ref.watch(currentUserProvider);
+    final weatherAsync = ref.watch(weatherProvider);
     final String fullName = user?.userMetadata?['full_name'] as String? ?? 'Student';
     final String firstName = fullName.split(' ').first;
 
@@ -43,6 +47,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(hostelsProvider);
+          ref.invalidate(weatherProvider);
         },
         child: CustomScrollView(
         slivers: [
@@ -54,6 +59,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               collapsedHeight: 100,
               topPadding: MediaQuery.of(context).padding.top,
               firstName: firstName,
+              weatherAsync: weatherAsync,
               searchController: _searchController,
               onSearchChanged: (val) {
                 setState(() {
@@ -196,6 +202,7 @@ class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.collapsedHeight,
     required this.topPadding,
     required this.firstName,
+    required this.weatherAsync,
     required this.searchController,
     required this.onSearchChanged,
   });
@@ -204,6 +211,7 @@ class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double collapsedHeight;
   final double topPadding;
   final String firstName;
+  final AsyncValue<WeatherInfo?> weatherAsync;
   final TextEditingController searchController;
   final Function(String) onSearchChanged;
 
@@ -287,40 +295,31 @@ class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
                           color: Colors.white.withValues(alpha: 0.7),
                           size: 20,
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextFormField(
-                            controller: searchController,
-                            onChanged: onSearchChanged,
-                            style: AppTypography.bodyMedium.copyWith(color: Colors.white),
-                            decoration: InputDecoration(
-                              hintText: AppStrings.searchHint,
-                              hintStyle: AppTypography.bodyMedium.copyWith(
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              AppStrings.searchHint,
+                              style: AppTypography.bodyMedium.copyWith(
                                 color: Colors.white.withValues(alpha: 0.5),
                               ),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              contentPadding: const EdgeInsets.only(bottom: 12),
                             ),
                           ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(right: 6),
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
+                          Container(
+                            margin: const EdgeInsets.only(right: 6),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.tune_rounded,
+                              color: Colors.white.withValues(alpha: 0.8),
+                              size: 18,
+                            ),
                           ),
-                          child: Icon(
-                            Icons.tune_rounded,
-                            color: Colors.white.withValues(alpha: 0.8),
-                            size: 18,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
 
                   const SizedBox(height: 16),
 
@@ -344,31 +343,51 @@ class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
                 children: [
                   const Text('☀️', style: TextStyle(fontSize: 22)),
                   const SizedBox(width: 8),
-                  Text(
-                    '${MockData.weatherTemp}°C',
-                    style: AppTypography.titleLarge.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
+                  weatherAsync.when(
+                    data: (weather) => Row(
+                      children: [
+                        Text(
+                          '${weather?.temperature.toInt() ?? MockData.weatherTemp}°C',
+                          style: AppTypography.titleLarge.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '· ${weather?.location ?? MockData.weatherLocation}',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '· ${MockData.weatherLocation}',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: Colors.white.withValues(alpha: 0.7),
+                    loading: () => const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    ),
+                    error: (err, stack) => Text(
+                      '${MockData.weatherTemp}°C · ${MockData.weatherLocation}',
+                      style: AppTypography.bodyMedium.copyWith(color: Colors.white),
                     ),
                   ),
                   const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.search_rounded,
-                      color: Colors.white.withValues(alpha: 0.8),
-                      size: 20,
+                  GestureDetector(
+                    onTap: () {
+                      GoRouter.of(context).go('/search');
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.search_rounded,
+                        color: Colors.white.withValues(alpha: 0.8),
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],

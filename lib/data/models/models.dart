@@ -171,6 +171,7 @@ class StudentProfile {
     required this.fullName,
     required this.phone,
     this.email,
+    this.studentNumber,
     this.university,
     this.campusId,
     this.avatarInitials,
@@ -181,9 +182,43 @@ class StudentProfile {
   final String fullName;
   final String phone;
   final String? email;
+  final String? studentNumber;
   final String? university;
   final String? campusId;
   final String? avatarInitials;
   final DateTime? createdAt;
 }
 
+/// Weather data model.
+class WeatherInfo {
+  const WeatherInfo({
+    required this.temperature,
+    required this.feelsLike,
+    required this.condition,
+    required this.location,
+    required this.humidity,
+    required this.windSpeed,
+  });
+
+  factory WeatherInfo.fromJson(Map<String, dynamic> json) {
+    final main = json['main'] as Map<String, dynamic>;
+    final weather = (json['weather'] as List).first as Map<String, dynamic>;
+    final wind = json['wind'] as Map<String, dynamic>;
+
+    return WeatherInfo(
+      temperature: (main['temp'] as num).toDouble(),
+      feelsLike: (main['feels_like'] as num).toDouble(),
+      condition: weather['main'] as String,
+      location: json['name'] as String,
+      humidity: main['humidity'] as int,
+      windSpeed: (wind['speed'] as num).toDouble(),
+    );
+  }
+
+  final double temperature;
+  final double feelsLike;
+  final String condition;
+  final String location;
+  final int humidity;
+  final double windSpeed;
+}
