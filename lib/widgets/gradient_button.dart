@@ -99,33 +99,39 @@ class _GradientButtonState extends State<GradientButton>
                   ]
                 : null,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.isLoading) ...[
-                const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (widget.isLoading) ...[
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-              ] else ...[
-                if (widget.icon != null) ...[
-                  Icon(widget.icon, color: Colors.white, size: 20),
-                  const SizedBox(width: 10),
+                ] else ...[
+                  if (widget.icon != null) ...[
+                    Icon(widget.icon, color: Colors.white, size: 20),
+                    const SizedBox(width: 10),
+                  ],
+                  Flexible(
+                    child: Text(
+                      widget.text,
+                      style: AppTypography.labelLarge.copyWith(
+                        color: Colors.white,
+                        fontSize: 15,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
-                Text(
-                  widget.text,
-                  style: AppTypography.labelLarge.copyWith(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
-                ),
               ],
-            ],
+            ),
           ),
         ),
       ),

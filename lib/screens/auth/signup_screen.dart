@@ -135,14 +135,19 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
     return Scaffold(
       backgroundColor: colors.surface,
-      body: Stack(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+        final screenHeight = constraints.maxHeight;
+        final headerH = (screenHeight * 0.35).clamp(200.0, 300.0);
+        final cardTop = (headerH - 60).clamp(160.0, 240.0);
+        return Stack(
         children: [
           // ── Gradient Header ──
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            height: 280,
+            height: headerH,
             child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -205,7 +210,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
           // ── Main Card ──
           Positioned.fill(
-            top: 220,
+            top: cardTop,
             child: Container(
               decoration: BoxDecoration(
                 color: colors.surface,
@@ -532,6 +537,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             ),
           ),
         ],
+      );
+        },
       ),
     );
   }

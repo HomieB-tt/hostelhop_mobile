@@ -3,14 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/weather_provider.dart';
 import '../core/theme/app_colors.dart';
+import '../core/theme/app_theme.dart';
 import '../core/theme/app_typography.dart';
 import '../core/constants/app_strings.dart';
 import '../data/mock/mock_data.dart';
 
-/// Sun Meter — weather gauge widget for the home screen header.
+/// Sun Meter — compact weather gauge card for the home screen.
 ///
-/// Shows temperature, feels-like, gradient bar with position indicator,
-/// and a Luganda tip.
+/// Renders as a standalone card on the page background (not inside the
+/// orange header gradient). Shows temperature, feels-like, a colored
+/// gradient bar with position indicator, and a Luganda tip.
 class SunMeter extends ConsumerWidget {
   const SunMeter({
     super.key,
@@ -34,9 +36,12 @@ class SunMeter extends ConsumerWidget {
 
     return weatherAsync.when(
       data: (weather) {
-        final temp = temperature ?? (weather?.temperature.toInt() ?? MockData.weatherTemp);
-        final feels = feelsLike ?? (weather?.feelsLike.toInt() ?? MockData.weatherFeelsLike);
-        final loc = location ?? (weather?.location ?? MockData.weatherLocation);
+        final temp = temperature ??
+            (weather?.temperature.toInt() ?? MockData.weatherTemp);
+        final feels = feelsLike ??
+            (weather?.feelsLike.toInt() ?? MockData.weatherFeelsLike);
+        final loc =
+            location ?? (weather?.location ?? MockData.weatherLocation);
 
         return _buildMeter(context, temp, feels, loc);
       },
@@ -51,44 +56,56 @@ class SunMeter extends ConsumerWidget {
   }
 
   Widget _buildLoadingState(BuildContext context) {
+    final colors = context.hhColors;
     return Container(
-      height: 180,
+      height: 120,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        color: colors.surfaceElevated,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
       ),
-      child: const Center(
-        child: CircularProgressIndicator(color: Colors.white),
+      child: Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: AppColors.orangeBright,
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildMeter(BuildContext context, int temp, int feels, String loc) {
+    final colors = context.hhColors;
+    final theme = Theme.of(context);
+
     // Position on the gauge (0.0 to 1.0) based on temp range 15–45°C.
     final gaugePosition = ((temp - 15) / 30).clamp(0.0, 1.0);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Header row with Pulsing Sun
+          // Header row
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Label + location
               Expanded(
@@ -99,10 +116,11 @@ class SunMeter extends ConsumerWidget {
                       children: [
                         const Icon(
                           Icons.wb_sunny_rounded,
-                          color: Colors.white,
-                          size: 14,
+                          color: AppColors.orangeBright,
+                          size: 13,
                         )
-                            .animate(onPlay: (controller) => controller.repeat())
+                            .animate(
+                                onPlay: (controller) => controller.repeat())
                             .scaleXY(
                               begin: 1.0,
                               end: 1.2,
@@ -116,53 +134,72 @@ class SunMeter extends ConsumerWidget {
                               duration: 1500.ms,
                               curve: Curves.easeInOut,
                             ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 5),
                         Text(
                           AppStrings.sunMeterLabel,
                           style: AppTypography.labelSmall.copyWith(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            letterSpacing: 1.5,
+                            color: colors.textMid,
+                            letterSpacing: 1.2,
                             fontWeight: FontWeight.w800,
+                            fontSize: 9,
+                          ),
+                        ),
+                        Text(
+                          ' · ',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: colors.textLow,
+                            fontSize: 9,
+                          ),
+                        ),
+                        Text(
+                          loc.toUpperCase(),
+                          style: AppTypography.labelSmall.copyWith(
+                            color: colors.textHigh,
+                            letterSpacing: 0.5,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 9,
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      loc.toUpperCase(),
-                      style: AppTypography.labelMedium.copyWith(
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                        fontWeight: FontWeight.w700,
-                      ),
                     ),
                   ],
                 ),
               ),
 
               // Temperature Display
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     '$temp°C',
                     style: AppTypography.temperature.copyWith(
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          offset: const Offset(0, 2),
-                          blurRadius: 4,
-                        ),
-                      ],
+                      color: colors.textHigh,
+                      fontSize: 28,
                     ),
                   ),
-                  Text(
-                    'FEELS LIKE $feels°',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 10,
-                      letterSpacing: 0.5,
+                  const SizedBox(width: 6),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'feels',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: colors.textLow,
+                            fontSize: 9,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                        Text(
+                          '$feels°',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: colors.textMid,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -170,67 +207,63 @@ class SunMeter extends ConsumerWidget {
             ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
-          // Enhanced Gradient Gauge
+          // Gradient Gauge
           SizedBox(
-            height: 24,
+            height: 20,
             child: Stack(
               alignment: Alignment.centerLeft,
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  height: 10,
+                  height: 8,
                   decoration: BoxDecoration(
                     gradient: AppColors.sunMeterGradient,
-                    borderRadius: BorderRadius.circular(5),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                 ),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final indicatorLeft =
-                        gaugePosition * (constraints.maxWidth - 24);
-                    return Positioned(
-                      left: indicatorLeft,
-                      top: 0,
-                      child: TweenAnimationBuilder<double>(
-                        tween: Tween(begin: 0, end: indicatorLeft),
-                        duration: const Duration(milliseconds: 1000),
-                        curve: Curves.easeOutBack,
-                        builder: (context, value, child) {
-                          return Transform.translate(
-                            offset: Offset(value - indicatorLeft, 0),
-                            child: child,
-                          );
-                        },
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                            border:
-                                Border.all(color: Colors.white, width: 2.5),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.25),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.orangePrimary,
+                        gaugePosition * (constraints.maxWidth - 20);
+                    return TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: indicatorLeft),
+                      duration: const Duration(milliseconds: 1000),
+                      curve: Curves.easeOutBack,
+                      builder: (context, value, child) {
+                        return Positioned(
+                          left: value,
+                          top: 0,
+                          child: Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                              border: Border.all(
+                                  color: AppColors.orangeBright, width: 2.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.orangePrimary,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     );
                   },
                 ),
@@ -238,48 +271,52 @@ class SunMeter extends ConsumerWidget {
             ),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
 
           // Gauge labels
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _GaugeLabel('Cool', Colors.white.withValues(alpha: 0.6)),
-              _GaugeLabel('Warm', Colors.white.withValues(alpha: 0.6)),
-              _GaugeLabel('Hot', Colors.white.withValues(alpha: 0.6)),
-              _GaugeLabel('Extreme', Colors.white.withValues(alpha: 0.9)),
+              _GaugeLabel('Cool (20°)', colors.textLow),
+              _GaugeLabel('Warm (28°)', colors.textLow),
+              _GaugeLabel('Hot (35°)', colors.textLow),
+              _GaugeLabel('🔥 Extreme', colors.textMid),
             ],
           ),
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
 
           // Dynamic Tip
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.warningSoft,
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: AppColors.warning.withValues(alpha: 0.15),
               ),
             ),
             child: Row(
               children: [
                 Icon(
-                  temp > 30 ? Icons.warning_amber_rounded : Icons.info_outline_rounded,
-                  color: Colors.white.withValues(alpha: 0.8),
-                  size: 16,
+                  temp > 30
+                      ? Icons.warning_amber_rounded
+                      : Icons.info_outline_rounded,
+                  color: AppColors.warning,
+                  size: 14,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     AppStrings.sunMeterTip,
                     style: AppTypography.bodySmall.copyWith(
-                      color: Colors.white.withValues(alpha: 0.85),
-                      fontSize: 11,
+                      color: colors.textMid,
+                      fontSize: 10,
                       height: 1.4,
                       fontStyle: FontStyle.italic,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -303,8 +340,8 @@ class _GaugeLabel extends StatelessWidget {
       text,
       style: AppTypography.labelSmall.copyWith(
         color: color,
-        fontSize: 9,
-        letterSpacing: 0.3,
+        fontSize: 8,
+        letterSpacing: 0.2,
       ),
     );
   }

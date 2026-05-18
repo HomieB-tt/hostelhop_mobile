@@ -37,7 +37,11 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
   Widget build(BuildContext context) {
     final colors = context.hhColors;
 
-    return Container(
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.75,
+      ),
+      child: Container(
       decoration: BoxDecoration(
         color: colors.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -90,7 +94,15 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
             ),
           ),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+
+          // Scrollable filter content
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
 
           // Price Range
           Padding(
@@ -227,7 +239,12 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
             ),
           ),
 
-          const SizedBox(height: 32),
+        ],
+      ),
+    ),
+    ),
+
+          const SizedBox(height: 24),
 
           // Apply Button
           Padding(
@@ -259,6 +276,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
           ),
         ],
       ),
+    ),
     );
   }
 

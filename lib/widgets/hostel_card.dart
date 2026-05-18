@@ -145,27 +145,29 @@ class _HostelCardState extends State<HostelCard>
                             ),
                           ),
                           const SizedBox(width: 6),
-                          ...tags.map(
-                            (tag) => Container(
-                              margin: const EdgeInsets.only(right: 4),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: tag == 'Selling Fast'
-                                    ? AppColors.error.withValues(alpha: 0.1)
-                                    : colors.brandSoft,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                tag,
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: tag == 'Selling Fast'
-                                      ? AppColors.error
-                                      : AppColors.orangeBright,
-                                  fontSize: 10, letterSpacing: 0.2),
+                          if (tags.isNotEmpty)
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: tags.first == 'Selling Fast'
+                                      ? AppColors.error.withValues(alpha: 0.1)
+                                      : colors.brandSoft,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  tags.first,
+                                  style: AppTypography.labelSmall.copyWith(
+                                    color: tags.first == 'Selling Fast'
+                                        ? AppColors.error
+                                        : AppColors.orangeBright,
+                                    fontSize: 10, letterSpacing: 0.2),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ),
-                          ),
                         ],
                       ),
                     ],

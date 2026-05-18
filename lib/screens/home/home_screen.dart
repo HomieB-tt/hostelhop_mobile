@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
-import '../../data/mock/mock_data.dart';
 import '../../data/providers/data_providers.dart';
 import '../../widgets/sun_meter.dart';
 import '../../widgets/hostel_card.dart';
@@ -16,7 +14,11 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../providers/weather_provider.dart';
 import '../../data/models/models.dart';
 
-/// Home screen with SliverPersistentHeader Sun Meter and hostel listings.
+/// Home screen with SliverPersistentHeader and hostel listings.
+///
+/// The orange gradient header contains only the greeting, title, and search bar.
+/// The Sun Meter sits below it on the regular page background as a standalone card.
+/// On scroll, the header collapses to show only temperature and location.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -25,14 +27,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  String _searchQuery = '';
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +34,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final hostelsAsync = ref.watch(hostelsProvider);
     final user = ref.watch(currentUserProvider);
     final weatherAsync = ref.watch(weatherProvider);
-    final String fullName = user?.userMetadata?['full_name'] as String? ?? 'Student';
+    final String fullName =
+        user?.userMetadata?['full_name'] as String? ?? 'Student';
     final String firstName = fullName.split(' ').first;
 
     return Scaffold(
@@ -50,161 +45,173 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ref.invalidate(weatherProvider);
         },
         child: CustomScrollView(
-        slivers: [
-          // ── Collapsing header ──
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _SunMeterHeaderDelegate(
-              expandedHeight: 340,
-              collapsedHeight: 100,
-              topPadding: MediaQuery.of(context).padding.top,
-              firstName: firstName,
-              weatherAsync: weatherAsync,
-              searchController: _searchController,
-              onSearchChanged: (val) {
-                setState(() {
-                  _searchQuery = val;
-                });
-              },
+          slivers: [
+            // ── Compact collapsing orange header ──
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _CompactHeaderDelegate(
+                expandedHeight: 180,
+                collapsedHeight: 56,
+                topPadding: MediaQuery.of(context).padding.top,
+                firstName: firstName,
+                weatherAsync: weatherAsync,
+                onSearchTap: () {
+                  // Navigate to search tab
+                  // Using DefaultTabController or GoRouter depending on shell
+                },
+              ),
             ),
-          ),
 
-          // ── Section title ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    AppStrings.availableHostels,
-                    style: AppTypography.titleLarge.copyWith(
-                      color: colors.textHigh,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {},
-                    child: Text(
-                      AppStrings.viewAll,
-                      style: AppTypography.labelLarge.copyWith(
-                        color: AppColors.orangeBright,
+            // ── Sun Meter card with persistent header property ──
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _SunMeterDelegate(
+                expandedHeight: 180,
+                collapsedHeight: 60,
+                weatherAsync: weatherAsync,
+              ),
+            ),
+
+            // ── Section title ──
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      AppStrings.availableHostels,
+                      style: AppTypography.titleLarge.copyWith(
+                        color: colors.textHigh,
                       ),
                     ),
-                  ),
-                ],
-              )
-                  .animate()
-                  .fadeIn(duration: 400.ms, delay: 200.ms)
-                  .slideY(begin: 0.06, end: 0, curve: Curves.easeOut),
-            ),
-          ),
-
-          // ── Hostel listings with staggered animation ──
-          hostelsAsync.when(
-            data: (hostels) {
-              final filteredHostels = hostels.where((h) => 
-                h.isOnline && (
-                  h.name.toLowerCase().contains(_searchQuery.toLowerCase()) || 
-                  h.address.toLowerCase().contains(_searchQuery.toLowerCase())
+                    GestureDetector(
+                      onTap: () {},
+                      child: Text(
+                        AppStrings.viewAll,
+                        style: AppTypography.labelLarge.copyWith(
+                          color: AppColors.orangeBright,
+                        ),
+                      ),
+                    ),
+                  ],
                 )
-              ).toList();
-              
-              if (filteredHostels.isEmpty) {
-                return SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Text(
-                      'No hostels found',
-                      style: AppTypography.bodyLarge.copyWith(color: colors.textMid),
+                    .animate()
+                    .fadeIn(duration: 400.ms, delay: 200.ms)
+                    .slideY(begin: 0.06, end: 0, curve: Curves.easeOut),
+              ),
+            ),
+
+            // ── Hostel listings with staggered animation ──
+            hostelsAsync.when(
+              data: (hostels) {
+                final filteredHostels = hostels
+                    .where((h) => h.isOnline)
+                    .toList();
+
+                if (filteredHostels.isEmpty) {
+                  return SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Text(
+                        'No hostels found',
+                        style: AppTypography.bodyLarge
+                            .copyWith(color: colors.textMid),
+                      ),
+                    ),
+                  );
+                }
+
+                return SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final hostel = filteredHostels[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: HostelCard(
+                            hostel: hostel,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (context, animation,
+                                          secondaryAnimation) =>
+                                      HostelDetailScreen(hostel: hostel),
+                                  transitionDuration:
+                                      const Duration(milliseconds: 350),
+                                  reverseTransitionDuration:
+                                      const Duration(milliseconds: 250),
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    final curved = CurvedAnimation(
+                                      parent: animation,
+                                      curve: Curves.easeOutCubic,
+                                    );
+                                    return SlideTransition(
+                                      position: Tween<Offset>(
+                                        begin: const Offset(1, 0),
+                                        end: Offset.zero,
+                                      ).animate(curved),
+                                      child: FadeTransition(
+                                          opacity: curved, child: child),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          )
+                              .animate()
+                              .fadeIn(
+                                duration: 400.ms,
+                                delay:
+                                    Duration(milliseconds: 300 + (index * 80)),
+                              )
+                              .slideY(
+                                begin: 0.06,
+                                end: 0,
+                                delay:
+                                    Duration(milliseconds: 300 + (index * 80)),
+                                duration: 400.ms,
+                                curve: Curves.easeOutCubic,
+                              ),
+                        );
+                      },
+                      childCount: filteredHostels.length,
                     ),
                   ),
                 );
-              }
-
-              return SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final hostel = filteredHostels[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: HostelCard(
-                      hostel: hostel,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder: (context, animation, secondaryAnimation) =>
-                                HostelDetailScreen(hostel: hostel),
-                            transitionDuration: const Duration(milliseconds: 350),
-                            reverseTransitionDuration:
-                                const Duration(milliseconds: 250),
-                            transitionsBuilder:
-                                (context, animation, secondaryAnimation, child) {
-                              final curved = CurvedAnimation(
-                                parent: animation,
-                                curve: Curves.easeOutCubic,
-                              );
-                              return SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(1, 0),
-                                  end: Offset.zero,
-                                ).animate(curved),
-                                child:
-                                    FadeTransition(opacity: curved, child: child),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    )
-                        .animate()
-                        .fadeIn(
-                          duration: 400.ms,
-                          delay: Duration(milliseconds: 300 + (index * 80)),
-                        )
-                        .slideY(
-                          begin: 0.06,
-                          end: 0,
-                          delay: Duration(milliseconds: 300 + (index * 80)),
-                          duration: 400.ms,
-                          curve: Curves.easeOutCubic,
-                        ),
-                  );
-                }, childCount: filteredHostels.length),
+              },
+              loading: () => const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
               ),
-            );
-            },
-            loading: () => const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
+              error: (err, stack) => SliverFillRemaining(
+                child: Center(child: Text('Error loading hostels: $err')),
+              ),
             ),
-            error: (err, stack) => SliverFillRemaining(
-              child: Center(child: Text('Error loading hostels: $err')),
-            ),
-          ),
 
-          // Bottom padding
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
-        ],
-      ),
+            // Bottom padding
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          ],
+        ),
       ),
     );
   }
 }
 
 // ──────────────────────────────────────
-//  Collapsing Sun Meter Header
+//  Compact Collapsing Header
 // ──────────────────────────────────────
 
-class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _SunMeterHeaderDelegate({
+class _CompactHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _CompactHeaderDelegate({
     required this.expandedHeight,
     required this.collapsedHeight,
     required this.topPadding,
     required this.firstName,
     required this.weatherAsync,
-    required this.searchController,
-    required this.onSearchChanged,
+    required this.onSearchTap,
   });
 
   final double expandedHeight;
@@ -212,8 +219,7 @@ class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double topPadding;
   final String firstName;
   final AsyncValue<WeatherInfo?> weatherAsync;
-  final TextEditingController searchController;
-  final Function(String) onSearchChanged;
+  final VoidCallback onSearchTap;
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -229,7 +235,7 @@ class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get minExtent => collapsedHeight + topPadding;
 
   @override
-  bool shouldRebuild(covariant _SunMeterHeaderDelegate oldDelegate) => true;
+  bool shouldRebuild(covariant _CompactHeaderDelegate oldDelegate) => true;
 
   @override
   Widget build(
@@ -238,22 +244,24 @@ class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     final progress = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
+
     return Container(
+      clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         gradient: AppColors.splashGradient,
         borderRadius: BorderRadius.vertical(
-          bottom: Radius.circular(24 * (1 - progress)),
+          bottom: Radius.circular(20 * (1 - progress)),
         ),
       ),
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // ── Expanded content ──
+          // ── Expanded content: greeting + title + search bar ──
           Opacity(
-            opacity: (1 - progress * 2).clamp(0.0, 1.0),
+            opacity: (1 - progress * 2.5).clamp(0.0, 1.0),
             child: Padding(
               padding: EdgeInsets.only(
-                top: topPadding + 16,
+                top: topPadding + 12,
                 left: 20,
                 right: 20,
               ),
@@ -267,34 +275,36 @@ class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
                       color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     AppStrings.findYourShade,
-                    style: AppTypography.displayLarge.copyWith(
+                    style: AppTypography.headlineLarge.copyWith(
                       color: Colors.white,
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
 
                   // Search bar
-                  Container(
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.15),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const SizedBox(width: 16),
-                        Icon(
-                          Icons.search_rounded,
-                          color: Colors.white.withValues(alpha: 0.7),
-                          size: 20,
+                  GestureDetector(
+                    onTap: onSearchTap,
+                    child: Container(
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.15),
                         ),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 16),
+                          Icon(
+                            Icons.search_rounded,
+                            color: Colors.white.withValues(alpha: 0.7),
+                            size: 20,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -309,74 +319,70 @@ class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(20),
                             ),
                             child: Icon(
                               Icons.tune_rounded,
                               color: Colors.white.withValues(alpha: 0.8),
-                              size: 18,
+                              size: 16,
                             ),
                           ),
                         ],
                       ),
                     ),
-
-                  const SizedBox(height: 16),
-
-                  // Sun Meter
-                  const SunMeter(),
+                  ),
                 ],
               ),
             ),
           ),
 
-          // ── Collapsed content ──
+          // ── Collapsed content: temp + location ──
           Opacity(
             opacity: (progress * 2 - 1).clamp(0.0, 1.0),
             child: Padding(
               padding: EdgeInsets.only(
-                top: topPadding + 12,
+                top: topPadding + 14,
                 left: 20,
                 right: 20,
               ),
               child: Row(
                 children: [
-                  const Text('☀️', style: TextStyle(fontSize: 22)),
+                  const Text('☀️', style: TextStyle(fontSize: 20)),
                   const SizedBox(width: 8),
                   weatherAsync.when(
                     data: (weather) => Row(
                       children: [
                         Text(
-                          '${weather?.temperature.toInt() ?? MockData.weatherTemp}°C',
-                          style: AppTypography.titleLarge.copyWith(
+                          '${weather?.temperature.toInt() ?? 28}°C',
+                          style: AppTypography.titleMedium.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Text(
-                          '· ${weather?.location ?? MockData.weatherLocation}',
-                          style: AppTypography.bodyMedium.copyWith(
+                          '· ${weather?.location ?? 'Kampala'}',
+                          style: AppTypography.bodySmall.copyWith(
                             color: Colors.white.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
                     ),
                     loading: () => const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
                     ),
                     error: (err, stack) => Text(
-                      '${MockData.weatherTemp}°C · ${MockData.weatherLocation}',
-                      style: AppTypography.bodyMedium.copyWith(color: Colors.white),
+                      '28°C · Kampala',
+                      style: AppTypography.bodyMedium
+                          .copyWith(color: Colors.white),
                     ),
                   ),
                   const Spacer(),
                   GestureDetector(
-                    onTap: () {
-                      GoRouter.of(context).go('/search');
-                    },
+                    onTap: onSearchTap,
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -386,7 +392,7 @@ class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
                       child: Icon(
                         Icons.search_rounded,
                         color: Colors.white.withValues(alpha: 0.8),
-                        size: 20,
+                        size: 18,
                       ),
                     ),
                   ),
@@ -394,6 +400,116 @@ class _SunMeterHeaderDelegate extends SliverPersistentHeaderDelegate {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SunMeterDelegate extends SliverPersistentHeaderDelegate {
+  _SunMeterDelegate({
+    required this.expandedHeight,
+    required this.collapsedHeight,
+    required this.weatherAsync,
+  });
+
+  final double expandedHeight;
+  final double collapsedHeight;
+  final AsyncValue<dynamic> weatherAsync;
+
+  @override
+  double get maxExtent => expandedHeight;
+
+  @override
+  double get minExtent => collapsedHeight;
+
+  @override
+  bool shouldRebuild(covariant _SunMeterDelegate oldDelegate) {
+    return expandedHeight != oldDelegate.expandedHeight ||
+        collapsedHeight != oldDelegate.collapsedHeight ||
+        weatherAsync != oldDelegate.weatherAsync;
+  }
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final progress = shrinkOffset / (maxExtent - minExtent);
+    final clampedProgress = progress.clamp(0.0, 1.0);
+
+    final colors = context.hhColors;
+
+    return Container(
+      color: colors.background,
+      child: Stack(
+        children: [
+          // Expanded Sun Meter
+          Opacity(
+            opacity: 1.0 - clampedProgress,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: const SunMeter(),
+            ),
+          ),
+
+          // Collapsed state
+          if (clampedProgress > 0.5)
+            Opacity(
+              opacity: (clampedProgress - 0.5) * 2,
+              child: Align(
+                alignment: Alignment.center,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: colors.surfaceElevated,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: colors.border),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: weatherAsync.when(
+                      data: (weather) {
+                        final temp = weather?.temperature.toInt() ?? 27;
+                        final loc = weather?.location ?? 'Kampala';
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.location_on_rounded, size: 16, color: AppColors.orangeBright),
+                                const SizedBox(width: 6),
+                                Text(
+                                  loc,
+                                  style: AppTypography.titleSmall.copyWith(color: colors.textHigh),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  '$temp°C',
+                                  style: AppTypography.titleSmall.copyWith(color: AppColors.orangeBright, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(Icons.wb_sunny_rounded, size: 16, color: AppColors.orangeBright),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                      loading: () => const Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))),
+                      error: (err, stack) => const SizedBox(),
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

@@ -8,7 +8,7 @@ import '../../core/utils/formatters.dart';
 import '../../data/models/models.dart';
 import '../../widgets/gradient_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/pesapal_provider.dart';
+
 
 /// Half-screen checkout bottom sheet.
 ///
@@ -57,80 +57,43 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet>
   Future<void> _processPayment() async {
     setState(() => _state = _CheckoutState.processing);
 
-    final pesapal = ref.read(pesapalServiceProvider);
-    
-    // 1. Get Access Token
-    final token = await pesapal.getAccessToken();
-    if (token == null) {
-      if (mounted) setState(() => _state = _CheckoutState.failed);
-      return;
-    }
-
-    // 2. Register IPN
-    final ipnId = await pesapal.registerIpn(token, 'https://hostelhop.ug/ipn');
-    if (ipnId == null) {
-      if (mounted) setState(() => _state = _CheckoutState.failed);
-      return;
-    }
-
-    // 3. Submit Order
-    final orderId = 'HH-${DateTime.now().millisecondsSinceEpoch}';
-    final amount = widget.room.pricePerSemester.toDouble();
-    
-    // Attempting to split the student's name if we had it, but we can default to Student for now.
-    final firstName = 'HostelHop';
-    final lastName = 'Student';
-
-    final orderResponse = await pesapal.submitOrder(
-      token: token,
-      ipnId: ipnId,
-      orderId: orderId,
-      amount: amount,
-      description: 'Hostel booking: ${widget.room.roomType}',
-      email: 'student@hostelhop.ug',
-      phoneNumber: widget.phoneNumber,
-      firstName: firstName,
-      lastName: lastName,
-    );
-
-    if (orderResponse == null || orderResponse['order_tracking_id'] == null) {
-      if (mounted) setState(() => _state = _CheckoutState.failed);
-      return;
-    }
-
-    final trackingId = orderResponse['order_tracking_id'] as String;
-
-    // 4. Poll for transaction status
-    bool isCompleted = false;
-
-    
-    // Poll for up to 60 * 3 seconds = 3 minutes
-    for (int i = 0; i < 60; i++) { 
-      await Future.delayed(const Duration(seconds: 3));
-      
-      if (!mounted) return;
-
-      final statusData = await pesapal.getTransactionStatus(token, trackingId);
-      if (statusData != null) {
-        final statusCode = statusData['payment_status_description']?.toString().toUpperCase() ?? '';
-        // PesaPal statuses: COMPLETED, FAILED, INVALID, PENDING
-        
-        if (statusCode == 'COMPLETED') {
-          isCompleted = true;
-          break;
-        } else if (statusCode == 'FAILED' || statusCode == 'INVALID') {
-
-          break;
-        }
-      }
-    }
+    // Simulate backend processing and sending USSD prompt to phone
+    await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
 
-    if (isCompleted) {
+    // Show simulated USSD Prompt Dialog
+    final isConfirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: context.hhColors.surfaceElevated,
+        title: Text('Simulated Phone Prompt', style: AppTypography.titleLarge.copyWith(color: context.hhColors.textHigh)),
+        content: Text('Enter PIN to confirm UGX ${Formatters.formatUGX(widget.room.pricePerSemester)} payment to HostelHop.', style: AppTypography.bodyMedium.copyWith(color: context.hhColors.textMid)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('CANCEL', style: TextStyle(color: AppColors.error)),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.success),
+            child: const Text('CONFIRM'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (isConfirmed == true) {
+      // Simulate waiting for payment confirmation webhook
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mounted) return;
       setState(() => _state = _CheckoutState.success);
       _checkController.forward();
     } else {
+      // User cancelled
       setState(() => _state = _CheckoutState.failed);
     }
   }
@@ -141,7 +104,7 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet>
     final theme = Theme.of(context);
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.52,
+      height: MediaQuery.of(context).size.height * 0.62,
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -195,56 +158,64 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet>
           'Confirm Payment',
           style: AppTypography.headlineSmall.copyWith(color: colors.textHigh),
         ),
-        const SizedBox(height: 20),
-
-        // Details
-        _DetailRow('Hostel', widget.hostel.name, colors),
-        _DetailRow('Room', widget.room.roomType, colors),
-        _DetailRow('Method', widget.paymentMethod, colors),
-        _DetailRow('Phone', widget.phoneNumber, colors),
-        const SizedBox(height: 8),
-        Divider(color: theme.colorScheme.outline),
-        const SizedBox(height: 8),
-        _DetailRow(
-          'Amount',
-          Formatters.formatUGX(widget.room.pricePerSemester),
-          colors,
-          isBold: true,
-        ),
-
-        const Spacer(),
-
-        // Info text
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.warningSoft,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.info_outline_rounded,
-                size: 18,
-                color: AppColors.warning,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  AppStrings.pinPrompt,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: colors.textMid,
-                    fontSize: 11,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
         const SizedBox(height: 16),
 
+        // Scrollable details area
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _DetailRow('Hostel', widget.hostel.name, colors),
+                _DetailRow('Room', widget.room.roomType, colors),
+                _DetailRow('Method', widget.paymentMethod, colors),
+                _DetailRow('Phone', widget.phoneNumber, colors),
+                const SizedBox(height: 8),
+                Divider(color: theme.colorScheme.outline),
+                const SizedBox(height: 8),
+                _DetailRow(
+                  'Amount',
+                  Formatters.formatUGX(widget.room.pricePerSemester),
+                  colors,
+                  isBold: true,
+                ),
+                const SizedBox(height: 16),
+
+                // Info text
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.warningSoft,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.info_outline_rounded,
+                        size: 18,
+                        color: AppColors.warning,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          AppStrings.pinPrompt,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: colors.textMid,
+                            fontSize: 11,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Pinned button at bottom
+        const SizedBox(height: 12),
         GradientButton(
           onPressed: _processPayment,
           text: AppStrings.payNow,

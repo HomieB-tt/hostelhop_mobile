@@ -57,14 +57,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       backgroundColor: colors.background,
-      body: Stack(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+        final screenHeight = constraints.maxHeight;
+        final headerHeight = (screenHeight * 0.42).clamp(280.0, 420.0);
+        final cardTop = (screenHeight * 0.32).clamp(220.0, 360.0);
+        return Stack(
         children: [
           // ── Orange gradient background header ──
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            height: MediaQuery.of(context).size.height * 0.45,
+            height: headerHeight,
             child: Container(
               decoration: const BoxDecoration(
                 gradient: AppColors.splashGradient,
@@ -72,7 +77,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: SafeArea(
                 child: Column(
                   children: [
-                    const SizedBox(height: 40),
+                    SizedBox(height: (screenHeight * 0.04).clamp(16.0, 40.0)),
                     // Logo with glow
                     Container(
                       width: 80,
@@ -123,7 +128,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
           // ── Login form card ──
           Positioned.fill(
-            top: MediaQuery.of(context).size.height * 0.35,
+            top: cardTop,
             child: Container(
               decoration: BoxDecoration(
                 color: colors.surface,
@@ -281,6 +286,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
         ],
+      );
+        },
       ),
     );
   }

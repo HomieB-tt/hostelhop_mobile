@@ -47,6 +47,7 @@ dependencies:
   flutter_local_notifications: ^21.0.0
   flutter_dotenv: ^6.0.1
   state_notifier: ^1.0.0
+  fl_chart: ^1.2.0
 
 dev_dependencies:
   flutter_test:
@@ -63,7 +64,7 @@ flutter:
     - .env
 
 flutter_launcher_icons:
-  android: "launcher_icon"
+  android: true
   ios: true
   image_path: "assets/icons/app_icon.png"
   min_sdk_android: 21

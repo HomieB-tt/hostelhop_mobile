@@ -136,7 +136,10 @@ class _NavItemState extends State<_NavItem>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding: EdgeInsets.symmetric(
+          horizontal: (MediaQuery.of(context).size.width * 0.04).clamp(10.0, 20.0),
+          vertical: 8,
+        ),
         decoration: BoxDecoration(
           color: widget.isActive
               ? AppColors.orangeBright.withValues(alpha: 0.1)

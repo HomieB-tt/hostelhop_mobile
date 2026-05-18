@@ -243,7 +243,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               // ── Pay Now ──
               GradientButton(
                 onPressed: _showCheckout,
-                text: '${AppStrings.payNow} — ${Formatters.formatUGX(amount)}',
+                text: '${AppStrings.payNow} — ${Formatters.formatUGXCompact(amount)}',
                 width: double.infinity,
                 icon: Icons.lock_rounded,
               )
@@ -278,7 +278,6 @@ class _SummaryRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
@@ -286,14 +285,20 @@ class _SummaryRow extends StatelessWidget {
               color: colors.textMid,
             ),
           ),
-          Text(
-            value,
-            style: (isBold
-                    ? AppTypography.titleMedium
-                    : AppTypography.bodyMedium)
-                .copyWith(
-              color: colors.textHigh,
-              fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value,
+              style: (isBold
+                      ? AppTypography.titleMedium
+                      : AppTypography.bodyMedium)
+                  .copyWith(
+                color: colors.textHigh,
+                fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
+              ),
+              textAlign: TextAlign.end,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

@@ -112,12 +112,16 @@ class _BookingCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Row(
             children: [
-              Text(booking.hostelName,
-                  style: AppTypography.titleSmall
-                      .copyWith(color: colors.textHigh, fontWeight: FontWeight.w700)),
+              Expanded(
+                child: Text(booking.hostelName,
+                    style: AppTypography.titleSmall
+                        .copyWith(color: colors.textHigh, fontWeight: FontWeight.w700),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+              ),
+              const SizedBox(width: 8),
               _StatusBadge(status: booking.status),
             ],
           ),
@@ -135,9 +139,13 @@ class _BookingCard extends StatelessWidget {
           Row(children: [
             Icon(Icons.calendar_today_rounded, size: 14, color: colors.textLow),
             const SizedBox(width: 6),
-            Text(
-              '${Formatters.formatDate(booking.checkInDate)} — ${Formatters.formatDate(booking.checkOutDate)}',
-              style: AppTypography.bodySmall.copyWith(color: colors.textMid, fontSize: 11),
+            Expanded(
+              child: Text(
+                '${Formatters.formatDate(booking.checkInDate)} — ${Formatters.formatDate(booking.checkOutDate)}',
+                style: AppTypography.bodySmall.copyWith(color: colors.textMid, fontSize: 11),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ]),
           const SizedBox(height: 8),

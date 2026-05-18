@@ -422,7 +422,7 @@ class _HostelDetailScreenState extends State<HostelDetailScreen> {
                           }),
                         ],
 
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 80),
                       ],
                     ),
                   ),
@@ -475,7 +475,7 @@ class _HostelDetailScreenState extends State<HostelDetailScreen> {
                         );
                       },
                 text: _selectedRoom != null 
-                    ? '${AppStrings.lockMyRoom} — ${Formatters.formatUGX(_selectedRoom!.pricePerSemester)}'
+                    ? '🔒 Lock My Room — ${Formatters.formatUGXCompact(_selectedRoom!.pricePerSemester)}'
                     : 'Select a room',
                 width: double.infinity,
               ),
