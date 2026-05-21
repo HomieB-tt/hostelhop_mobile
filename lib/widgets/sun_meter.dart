@@ -231,40 +231,40 @@ class SunMeter extends ConsumerWidget {
                       tween: Tween(begin: 0, end: indicatorLeft),
                       duration: const Duration(milliseconds: 1000),
                       curve: Curves.easeOutBack,
-                      builder: (context, value, child) {
-                        return Positioned(
-                          left: value,
-                          top: 0,
-                          child: Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                              border: Border.all(
-                                  color: AppColors.orangeBright, width: 2.5),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Center(
+                          builder: (context, value, child) {
+                            return Positioned(
+                              left: value,
+                              top: 0,
                               child: Container(
-                                width: 6,
-                                height: 6,
-                                decoration: const BoxDecoration(
+                                width: 20,
+                                height: 20,
+                                decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: AppColors.orangePrimary,
+                                  color: Colors.white,
+                                  border: Border.all(
+                                      color: AppColors.orangeBright, width: 2.5),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.orangePrimary,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         );
-                      },
-                    );
                   },
                 ),
               ],

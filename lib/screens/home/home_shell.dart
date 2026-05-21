@@ -3,21 +3,63 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 
 /// Main app shell with bottom navigation after authentication.
-class HomeShell extends StatelessWidget {
+class HomeShell extends StatefulWidget {
   const HomeShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
+  State<HomeShell> createState() => _HomeShellState();
+}
+
+class _HomeShellState extends State<HomeShell> {
+  DateTime? _lastBackPressTime;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = context.hhColors;
 
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: Container(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        // If not on Home tab, go to Home tab
+        if (widget.navigationShell.currentIndex != 0) {
+          widget.navigationShell.goBranch(0);
+          return;
+        }
+
+        // Double tap to exit logic
+        final now = DateTime.now();
+        if (_lastBackPressTime == null ||
+            now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+          _lastBackPressTime = now;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Press back again to exit',
+                style: AppTypography.bodyMedium.copyWith(color: Colors.white),
+              ),
+              backgroundColor: colors.surfaceElevated,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+
+        // Exit the app
+        Navigator.of(context).pop();
+      },
+      child: Scaffold(
+        body: widget.navigationShell,
+        bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           border: Border(
@@ -37,37 +79,38 @@ class HomeShell extends StatelessWidget {
                   icon: Icons.home_outlined,
                   activeIcon: Icons.home_rounded,
                   label: AppStrings.navHome,
-                  isActive: navigationShell.currentIndex == 0,
-                  onTap: () => navigationShell.goBranch(0),
+                  isActive: widget.navigationShell.currentIndex == 0,
+                  onTap: () => widget.navigationShell.goBranch(0),
                 ),
                 _NavItem(
-                  icon: Icons.search_rounded,
-                  activeIcon: Icons.search_rounded,
-                  label: AppStrings.navSearch,
-                  isActive: navigationShell.currentIndex == 1,
-                  onTap: () => navigationShell.goBranch(1),
+                  icon: Icons.explore_outlined,
+                  activeIcon: Icons.explore_rounded,
+                  label: AppStrings.navExplore,
+                  isActive: widget.navigationShell.currentIndex == 1,
+                  onTap: () => widget.navigationShell.goBranch(1),
                 ),
                 _NavItem(
                   icon: Icons.calendar_today_outlined,
                   activeIcon: Icons.calendar_today_rounded,
                   label: AppStrings.navBookings,
-                  isActive: navigationShell.currentIndex == 2,
-                  onTap: () => navigationShell.goBranch(2),
+                  isActive: widget.navigationShell.currentIndex == 2,
+                  onTap: () => widget.navigationShell.goBranch(2),
                 ),
                 _NavItem(
-                  icon: Icons.settings_outlined,
-                  activeIcon: Icons.settings_rounded,
+                  icon: Icons.person_outline_rounded,
+                  activeIcon: Icons.person_rounded,
                   label: AppStrings.navSettings,
-                  isActive: navigationShell.currentIndex == 3,
-                  onTap: () => navigationShell.goBranch(3),
+                  isActive: widget.navigationShell.currentIndex == 3,
+                  onTap: () => widget.navigationShell.goBranch(3),
                 ),
               ],
-            ),
           ),
         ),
       ),
-    );
-  }
+    ),
+   ),
+  );
+ }
 }
 
 class _NavItem extends StatefulWidget {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -38,6 +39,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         user?.userMetadata?['full_name'] as String? ?? 'Student';
     final String firstName = fullName.split(' ').first;
 
+    final screenHeight = MediaQuery.of(context).size.height;
+    final paddingTop = MediaQuery.of(context).padding.top;
+    final usableHeight = screenHeight - paddingTop;
+
+    // Use responsive heights
+    final headerExpandedHeight = usableHeight * 0.25;
+    final sunMeterExpandedHeight = usableHeight * 0.25;
+
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
@@ -50,14 +59,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             SliverPersistentHeader(
               pinned: true,
               delegate: _CompactHeaderDelegate(
-                expandedHeight: 180,
+                expandedHeight: headerExpandedHeight,
                 collapsedHeight: 56,
-                topPadding: MediaQuery.of(context).padding.top,
+                topPadding: paddingTop,
                 firstName: firstName,
                 weatherAsync: weatherAsync,
                 onSearchTap: () {
-                  // Navigate to search tab
-                  // Using DefaultTabController or GoRouter depending on shell
+                  context.go('/search');
                 },
               ),
             ),
@@ -66,7 +74,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             SliverPersistentHeader(
               pinned: true,
               delegate: _SunMeterDelegate(
-                expandedHeight: 180,
+                expandedHeight: sunMeterExpandedHeight,
                 collapsedHeight: 60,
                 weatherAsync: weatherAsync,
               ),
@@ -318,7 +326,7 @@ class _CompactHeaderDelegate extends SliverPersistentHeaderDelegate {
                             margin: const EdgeInsets.only(right: 6),
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
+                              color: AppColors.orangeBright.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Icon(
@@ -438,18 +446,22 @@ class _SunMeterDelegate extends SliverPersistentHeaderDelegate {
 
     final colors = context.hhColors;
 
-    return Container(
-      color: colors.background,
-      child: Stack(
-        children: [
-          // Expanded Sun Meter
-          Opacity(
-            opacity: 1.0 - clampedProgress,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: const SunMeter(),
+    return ClipRect(
+      child: Container(
+        color: colors.background,
+        child: Stack(
+          children: [
+            // Expanded Sun Meter
+            IgnorePointer(
+              ignoring: clampedProgress > 0.5,
+              child: Opacity(
+                opacity: 1.0 - clampedProgress,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: const SunMeter(),
+                ),
+              ),
             ),
-          ),
 
           // Collapsed state
           if (clampedProgress > 0.5)
@@ -512,6 +524,7 @@ class _SunMeterDelegate extends SliverPersistentHeaderDelegate {
             ),
         ],
       ),
+     ),
     );
   }
 }

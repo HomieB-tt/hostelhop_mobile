@@ -60,7 +60,7 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.unauthenticated,
-        errorMessage: e.toString(),
+        errorMessage: e.toString().replaceAll('Exception: ', ''),
         isLoading: false,
       );
     }
@@ -86,7 +86,7 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.unauthenticated,
-        errorMessage: e.toString(),
+        errorMessage: e.toString().replaceAll('Exception: ', ''),
         isLoading: false,
       );
     }
@@ -112,7 +112,7 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.unauthenticated,
-        errorMessage: e.toString(),
+        errorMessage: e.toString().replaceAll('Exception: ', ''),
         isLoading: false,
       );
     }
@@ -126,7 +126,7 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.unauthenticated,
-        errorMessage: e.toString(),
+        errorMessage: e.toString().replaceAll('Exception: ', ''),
         isLoading: false,
       );
     }
@@ -152,7 +152,7 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.unauthenticated,
-        errorMessage: e.toString(),
+        errorMessage: e.toString().replaceAll('Exception: ', ''),
         isLoading: false,
       );
     }
@@ -164,7 +164,7 @@ class AuthNotifier extends Notifier<AuthState> {
       await ref.read(supabaseServiceProvider).signOut();
       state = const AuthState(status: AuthStatus.unauthenticated);
     } catch (e) {
-      state = state.copyWith(errorMessage: e.toString(), isLoading: false);
+      state = state.copyWith(errorMessage: e.toString().replaceAll('Exception: ', ''), isLoading: false);
     }
   }
 }

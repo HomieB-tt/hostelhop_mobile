@@ -151,17 +151,13 @@ class _HostelCardState extends State<HostelCard>
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: tags.first == 'Selling Fast'
-                                      ? AppColors.error.withValues(alpha: 0.1)
-                                      : colors.brandSoft,
+                                  color: _getTagColor(tags.first).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   tags.first,
                                   style: AppTypography.labelSmall.copyWith(
-                                    color: tags.first == 'Selling Fast'
-                                        ? AppColors.error
-                                        : AppColors.orangeBright,
+                                    color: _getTagColor(tags.first),
                                     fontSize: 10, letterSpacing: 0.2),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -181,7 +177,7 @@ class _HostelCardState extends State<HostelCard>
                     Text(
                       Formatters.formatUGXCompact(hostel.startingPrice),
                       style: AppTypography.priceCompact
-                          .copyWith(color: colors.textHigh),
+                          .copyWith(color: AppColors.orangeBright),
                     ),
                     Text(
                       '/semester',
@@ -204,5 +200,16 @@ class _HostelCardState extends State<HostelCard>
       child: const Icon(
         Icons.apartment_rounded, color: AppColors.orangeBright, size: 28),
     );
+  }
+
+  Color _getTagColor(String tag) {
+    switch (tag) {
+      case 'Selling Fast':
+        return AppColors.warning;
+      case 'AC':
+        return AppColors.blueLight;
+      default:
+        return AppColors.orangeBright;
+    }
   }
 }

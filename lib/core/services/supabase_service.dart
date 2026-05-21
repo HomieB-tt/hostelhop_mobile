@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseService {
@@ -13,14 +14,23 @@ class SupabaseService {
 
   // Auth methods
   Future<Session?> signInWithEmail(String email, String password) async {
+    final connectivity = await Connectivity().checkConnectivity();
+    if (connectivity.contains(ConnectivityResult.none)) {
+      throw Exception('No internet connection. Please connect and try again.');
+    }
+
     try {
       final response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
       return response.session;
+    } on AuthRetryableFetchException {
+      throw Exception('Connection failed. Please check your internet.');
+    } on AuthException catch (e) {
+      throw Exception(e.message);
     } catch (e) {
-      rethrow;
+      throw Exception('Something went wrong. Please try again.');
     }
   }
 

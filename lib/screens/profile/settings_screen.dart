@@ -9,6 +9,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
 import '../../data/mock/mock_data.dart';
 import '../../providers/theme_provider.dart';
+import '../../features/auth/providers/auth_provider.dart';
 
 /// Profile screen with avatar, info, and quick links.
 class SettingsScreen extends ConsumerWidget {
@@ -119,14 +120,23 @@ class SettingsScreen extends ConsumerWidget {
                         icon: Icons.calendar_today_outlined,
                         title: AppStrings.myBookings,
                         colors: colors,
-                        onTap: () {},
+                        onTap: () {
+                          GoRouter.of(context).go('/bookings');
+                        },
                       ),
                       Divider(height: 1, color: theme.colorScheme.outline),
                       _ProfileTile(
                         icon: Icons.receipt_long_outlined,
                         title: 'Payment History',
                         colors: colors,
-                        onTap: () {},
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Payment history feature coming soon', style: AppTypography.bodyMedium.copyWith(color: Colors.white)),
+                              backgroundColor: colors.surfaceElevated,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -200,7 +210,14 @@ class SettingsScreen extends ConsumerWidget {
                         icon: Icons.notifications_none_rounded,
                         title: AppStrings.pushNotifications,
                         colors: colors,
-                        onTap: () {},
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Push notifications settings coming soon', style: AppTypography.bodyMedium.copyWith(color: Colors.white)),
+                              backgroundColor: colors.surfaceElevated,
+                            ),
+                          );
+                        },
                       ),
                       Divider(height: 1, color: theme.colorScheme.outline),
                       _ProfileTile(
@@ -208,7 +225,28 @@ class SettingsScreen extends ConsumerWidget {
                         title: AppStrings.about,
                         subtitle: AppStrings.version,
                         colors: colors,
-                        onTap: () {},
+                        onTap: () {
+                          showAboutDialog(
+                            context: context,
+                            applicationName: 'HostelHop',
+                            applicationVersion: AppStrings.version,
+                            applicationIcon: Container(
+                              width: 50,
+                              height: 50,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: AppColors.primaryGradient,
+                              ),
+                              child: const Center(
+                                child: Icon(Icons.location_on_rounded, color: Colors.white),
+                              ),
+                            ),
+                            children: [
+                              const SizedBox(height: 16),
+                              Text('HostelHop is the easiest way to find and book student accommodation.', style: AppTypography.bodyMedium.copyWith(color: colors.textMid)),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -233,7 +271,8 @@ class SettingsScreen extends ConsumerWidget {
                     colors: colors,
                     isDestructive: true,
                     onTap: () {
-                      // TODO: wire to auth provider
+                      ref.read(authProvider.notifier).signOut();
+                      GoRouter.of(context).go('/login');
                     },
                   ),
                 )

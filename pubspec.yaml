@@ -39,6 +39,9 @@ dependencies:
   image_picker: ^1.0.0
   flutter_image_compress: ^2.1.0
 
+  # Connectivity
+  connectivity_plus: ^6.0.3
+
   # Utils
   shared_preferences: ^2.3.4
   intl: ^0.20.2
