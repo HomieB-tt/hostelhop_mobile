@@ -45,7 +45,12 @@ class SunMeter extends ConsumerWidget {
 
         return _buildMeter(context, temp, feels, loc);
       },
-      loading: () => _buildLoadingState(context),
+      loading: () => _buildMeter(
+        context,
+        temperature ?? MockData.weatherTemp,
+        feelsLike ?? MockData.weatherFeelsLike,
+        location ?? MockData.weatherLocation,
+      ),
       error: (err, stack) => _buildMeter(
         context,
         temperature ?? MockData.weatherTemp,
@@ -55,32 +60,8 @@ class SunMeter extends ConsumerWidget {
     );
   }
 
-  Widget _buildLoadingState(BuildContext context) {
-    final colors = context.hhColors;
-    return Container(
-      height: 120,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.surfaceElevated,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border),
-      ),
-      child: Center(
-        child: SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(
-            strokeWidth: 2.5,
-            color: AppColors.orangeBright,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildMeter(BuildContext context, int temp, int feels, String loc) {
     final colors = context.hhColors;
-    final theme = Theme.of(context);
 
     // Position on the gauge (0.0 to 1.0) based on temp range 15–45°C.
     final gaugePosition = ((temp - 15) / 30).clamp(0.0, 1.0);
@@ -88,7 +69,7 @@ class SunMeter extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: colors.border),
         boxShadow: [

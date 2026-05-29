@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/utils/snackbar_utils.dart';
 
 /// Main app shell with bottom navigation after authentication.
 class HomeShell extends StatefulWidget {
@@ -22,7 +22,6 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = context.hhColors;
 
     return PopScope(
       canPop: false,
@@ -40,17 +39,7 @@ class _HomeShellState extends State<HomeShell> {
         if (_lastBackPressTime == null ||
             now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
           _lastBackPressTime = now;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Press back again to exit',
-                style: AppTypography.bodyMedium.copyWith(color: Colors.white),
-              ),
-              backgroundColor: colors.surfaceElevated,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 2),
-            ),
-          );
+          SnackBarUtils.show(context, 'Press back again to exit', duration: const Duration(seconds: 2));
           return;
         }
 

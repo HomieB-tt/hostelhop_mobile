@@ -46,12 +46,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      _navigateToLogin();
+      _navigateToHome();
     }
   }
 
-  void _navigateToLogin() {
-    context.go('/login');
+  void _navigateToHome() {
+    context.go('/home');
   }
 
   @override
@@ -74,7 +74,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Padding(
                 padding: const EdgeInsets.only(right: 16, top: 8),
                 child: TextButton(
-                  onPressed: _navigateToLogin,
+                  onPressed: _navigateToHome,
                   child: Text(
                     AppStrings.skip,
                     style: AppTypography.labelLarge.copyWith(

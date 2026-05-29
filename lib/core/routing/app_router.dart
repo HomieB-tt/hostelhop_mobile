@@ -11,6 +11,9 @@ import 'package:hostelhop_mobile/screens/booking/my_bookings_screen.dart';
 import 'package:hostelhop_mobile/screens/splash/splash_screen.dart';
 import 'package:hostelhop_mobile/screens/search/search_screen.dart';
 import 'package:hostelhop_mobile/screens/profile/edit_profile_screen.dart';
+import 'package:hostelhop_mobile/screens/hostel_detail/rooms_list_screen.dart';
+import 'package:hostelhop_mobile/screens/hostel_detail/room_detail_screen.dart';
+import 'package:hostelhop_mobile/data/models/models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -20,32 +23,30 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authState = ref.read(authProvider);
       final isAuthenticated = authState.status == AuthStatus.authenticated;
-      final isChecking = authState.status == AuthStatus.checking;
       final location = state.uri.toString();
 
-      if (location == '/splash' && !isAuthenticated && !isChecking) {
+      // Always allow these routes
+      if (location == '/splash' ||
+          location.startsWith('/onboarding') ||
+          location.startsWith('/auth/') ||
+          location.startsWith('/login') ||
+          location.startsWith('/signup') ||
+          location.startsWith('/home') ||
+          location.startsWith('/search') ||
+          location.startsWith('/rooms') ||
+          location.startsWith('/room-detail')) {
+        
+        // But redirect authenticated users away from auth screens
+        if (isAuthenticated &&
+            (location.startsWith('/login') ||
+                location.startsWith('/signup') ||
+                location.startsWith('/onboarding'))) {
+          return '/home';
+        }
         return null;
       }
 
-      if (location.startsWith('/auth/')) {
-        return null;
-      }
-
-      if (!isAuthenticated &&
-          !location.startsWith('/onboarding') &&
-          !location.startsWith('/login') &&
-          !location.startsWith('/signup') &&
-          !location.startsWith('/splash')) {
-        return '/login';
-      }
-
-      if (isAuthenticated &&
-          (location.startsWith('/login') ||
-              location.startsWith('/signup') ||
-              location.startsWith('/onboarding'))) {
-        return '/home';
-      }
-
+      // Guest access for everything else is fine as we handle auth checks in screens
       return null;
     },
     routes: [
@@ -82,6 +83,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           key: state.pageKey,
           child: const SignupScreen(),
         ),
+      ),
+      GoRoute(
+        path: '/rooms',
+        name: 'rooms',
+        builder: (context, state) => RoomsListScreen(hostel: state.extra as Hostel),
+      ),
+      GoRoute(
+        path: '/room-detail',
+        name: 'room-detail',
+        builder: (context, state) => RoomDetailScreen(room: state.extra as Room),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

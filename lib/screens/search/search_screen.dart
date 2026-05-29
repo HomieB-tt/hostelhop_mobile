@@ -1,12 +1,11 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
-import '../../core/constants/app_strings.dart';
 import '../../widgets/filter_sheet.dart';
+import '../../widgets/search_input.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -79,104 +78,28 @@ class _SearchScreenState extends State<SearchScreen> {
                 const SizedBox(height: 16),
                 
                 // Glassmorphism Search Input
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.15),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 16),
-                          Icon(
-                            Icons.search_rounded,
-                            color: Colors.white.withValues(alpha: 0.7),
-                            size: 20,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: TextField(
-                              controller: _searchController,
-                              focusNode: _searchFocus,
-                              style: AppTypography.bodyMedium.copyWith(color: Colors.white),
-                              decoration: InputDecoration(
-                                hintText: AppStrings.searchHint,
-                                hintStyle: AppTypography.bodyMedium.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.5),
-                                ),
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                contentPadding: const EdgeInsets.only(bottom: 12),
-                              ),
-                              onChanged: (value) {
-                                setState(() {});
-                              },
-                              onSubmitted: (value) {
-                                // Add to recents if not empty
-                                if (value.trim().isNotEmpty && !_recentSearches.contains(value.trim())) {
-                                  setState(() {
-                                    _recentSearches.insert(0, value.trim());
-                                    if (_recentSearches.length > 8) {
-                                      _recentSearches.removeLast();
-                                    }
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                          if (_searchController.text.isNotEmpty)
-                            GestureDetector(
-                              onTap: () {
-                                _searchController.clear();
-                                setState(() {});
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                color: Colors.transparent,
-                                child: Icon(
-                                  Icons.close_rounded,
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                  size: 18,
-                                ),
-                              ),
-                            ),
-                          const SizedBox(width: 4),
-                          // Filter button
-                          GestureDetector(
-                            onTap: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (context) => const FilterSheet(),
-                              );
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 6),
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                Icons.tune_rounded,
-                                color: Colors.white.withValues(alpha: 0.8),
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                SearchInput(
+                  controller: _searchController,
+                  focusNode: _searchFocus,
+                  onChanged: (value) => setState(() {}),
+                  onSubmitted: (value) {
+                    if (value.trim().isNotEmpty && !_recentSearches.contains(value.trim())) {
+                      setState(() {
+                        _recentSearches.insert(0, value.trim());
+                        if (_recentSearches.length > 8) {
+                          _recentSearches.removeLast();
+                        }
+                      });
+                    }
+                  },
+                  onFilterTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => const FilterSheet(),
+                    );
+                  },
                 ),
               ],
             ),
@@ -281,9 +204,6 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildSearchResults(HostelHopColors colors) {
-    // We can either fetch the Provider here or just show a message telling the user to use the main list.
-    // For now, since the home screen handles filtering, we'll suggest going back to home,
-    // OR we could actually render the list here. Let's just show a placeholder as we'll implement full search later.
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

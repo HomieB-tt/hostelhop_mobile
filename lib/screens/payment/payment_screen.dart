@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/snackbar_utils.dart';
 import '../../data/models/models.dart';
 import '../../data/mock/mock_data.dart';
 import '../../widgets/gradient_button.dart';
@@ -72,9 +73,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   void _showCheckout() {
     // Validate phone
     if (_phoneController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a phone number')),
-      );
+      SnackBarUtils.showError(context, 'Please enter a phone number');
       return;
     }
 

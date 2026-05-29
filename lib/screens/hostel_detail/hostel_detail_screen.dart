@@ -1,41 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/utils/formatters.dart';
 import '../../data/models/models.dart';
+import '../../data/providers/data_providers.dart';
 import '../../widgets/gradient_button.dart';
-import '../payment/payment_screen.dart';
+import '../../features/auth/providers/auth_provider.dart';
+import 'rooms_list_screen.dart';
 
 /// Hostel detail screen showing full info, amenities, availability, and pricing.
-class HostelDetailScreen extends StatefulWidget {
+class HostelDetailScreen extends StatelessWidget {
   const HostelDetailScreen({super.key, required this.hostel});
 
   final Hostel hostel;
 
   @override
-  State<HostelDetailScreen> createState() => _HostelDetailScreenState();
-}
-
-class _HostelDetailScreenState extends State<HostelDetailScreen> {
-  Room? _selectedRoom;
-
-  @override
-  void initState() {
-    super.initState();
-    // Default select the first available room if any
-    final availableRooms = widget.hostel.rooms.where((r) => r.isAvailable && !r.isUnderMaintenance).toList();
-    if (availableRooms.isNotEmpty) {
-      _selectedRoom = availableRooms.first;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final hostel = widget.hostel;
     final colors = context.hhColors;
     final theme = Theme.of(context);
 
@@ -66,9 +51,40 @@ class _HostelDetailScreenState extends State<HostelDetailScreen> {
                     ),
                   ),
                   actions: [
+                    // Save button
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final savedIds = ref.watch(savedHostelsProvider);
+                        final isSaved = savedIds.contains(hostel.id);
+                        final isAuthenticated = ref.watch(isAuthenticatedProvider);
+
+                        return Container(
+                          margin: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                              color: isSaved ? AppColors.orangeBright : Colors.white,
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              if (isAuthenticated) {
+                                ref.read(savedHostelsProvider.notifier).toggle(hostel.id);
+                              } else {
+                                context.push('/login');
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
+
                     // Rooms left badge
                     Container(
-                      margin: const EdgeInsets.only(right: 16),
+                      margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 6,
@@ -77,11 +93,13 @@ class _HostelDetailScreenState extends State<HostelDetailScreen> {
                         color: AppColors.success,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text(
-                        '🏠 ${hostel.availableRooms} Rooms Left!',
-                        style: AppTypography.labelMedium.copyWith(
-                          color: Colors.white,
-                          fontSize: 11,
+                      child: Center(
+                        child: Text(
+                          '🏠 ${hostel.availableRooms} Rooms Left!',
+                          style: AppTypography.labelMedium.copyWith(
+                            color: Colors.white,
+                            fontSize: 11,
+                          ),
                         ),
                       ),
                     )
@@ -340,87 +358,7 @@ class _HostelDetailScreenState extends State<HostelDetailScreen> {
 
                         const SizedBox(height: 24),
 
-                        // Available Rooms section
-                        if (hostel.rooms.isNotEmpty) ...[
-                          Text(
-                            AppStrings.roomsRemaining, // Or "Available Rooms" if added to AppStrings
-                            style: AppTypography.titleMedium.copyWith(
-                              color: colors.textHigh,
-                            ),
-                          ).animate().fadeIn(duration: 400.ms, delay: 650.ms),
-                          const SizedBox(height: 12),
-                          
-                          // Room selection list
-                          ...hostel.rooms.where((r) => r.isAvailable && !r.isUnderMaintenance).map((room) {
-                            final isSelected = _selectedRoom?.id == room.id;
-                            
-                            return GestureDetector(
-                              onTap: () => setState(() => _selectedRoom = room),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                margin: const EdgeInsets.only(bottom: 12),
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppColors.orangeBright.withValues(alpha: 0.08)
-                                      : theme.colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? AppColors.orangeBright
-                                        : theme.colorScheme.outline,
-                                    width: isSelected ? 2 : 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            room.roomType,
-                                            style: AppTypography.titleSmall.copyWith(
-                                              color: colors.textHigh,
-                                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            'Occupancy: ${room.currentOccupancy}/${room.maxOccupancy}',
-                                            style: AppTypography.bodySmall.copyWith(
-                                              color: colors.textMid,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          Formatters.formatUGX(room.pricePerSemester),
-                                          style: AppTypography.titleSmall.copyWith(
-                                            color: AppColors.orangeBright,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '/semester',
-                                          style: AppTypography.bodySmall.copyWith(
-                                            color: colors.textLow,
-                                            fontSize: 10,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ).animate().fadeIn(duration: 400.ms, delay: 680.ms).slideY(begin: 0.06, end: 0);
-                          }),
-                        ],
+
 
                         const SizedBox(height: 80),
                       ],
@@ -431,7 +369,7 @@ class _HostelDetailScreenState extends State<HostelDetailScreen> {
             ),
           ),
 
-          // ── Lock My Room CTA ──
+          // ── View Available Rooms CTA ──
           Container(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
             decoration: BoxDecoration(
@@ -445,38 +383,34 @@ class _HostelDetailScreenState extends State<HostelDetailScreen> {
             child: SafeArea(
               top: false,
               child: GradientButton(
-                onPressed: _selectedRoom == null
-                    ? null
-                    : () {
-                        Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder: (context, animation, secondaryAnimation) =>
-                                PaymentScreen(hostel: hostel, room: _selectedRoom!),
-                            transitionDuration: const Duration(milliseconds: 400),
-                            reverseTransitionDuration:
-                                const Duration(milliseconds: 300),
-                            transitionsBuilder:
-                                (context, animation, secondaryAnimation, child) {
-                              final curved = CurvedAnimation(
-                                parent: animation,
-                                curve: Curves.easeOutCubic,
-                              );
-                              return SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(0, 0.12),
-                                  end: Offset.zero,
-                                ).animate(curved),
-                                child: FadeTransition(
-                                    opacity: curved, child: child),
-                              );
-                            },
-                          ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          RoomsListScreen(hostel: hostel),
+                      transitionDuration: const Duration(milliseconds: 350),
+                      reverseTransitionDuration:
+                          const Duration(milliseconds: 250),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) {
+                        final curved = CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutCubic,
+                        );
+                        return SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(1, 0),
+                            end: Offset.zero,
+                          ).animate(curved),
+                          child: FadeTransition(
+                              opacity: curved, child: child),
                         );
                       },
-                text: _selectedRoom != null 
-                    ? '🔒 Lock My Room — ${Formatters.formatUGXCompact(_selectedRoom!.pricePerSemester)}'
-                    : 'Select a room',
+                    ),
+                  );
+                },
+                text: '🏠 View Available Rooms (${hostel.availableRooms})',
                 width: double.infinity,
               ),
             ),

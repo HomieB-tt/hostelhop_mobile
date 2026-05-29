@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/utils/snackbar_utils.dart';
 import '../../data/mock/mock_data.dart';
 
 
@@ -54,13 +55,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     if (_formKey.currentState!.validate()) {
       // In a real app we would update state/backend here.
       // For now we just go back and show a success message.
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Profile updated successfully!', style: AppTypography.bodyMedium.copyWith(color: Colors.white)),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      SnackBarUtils.showSuccess(context, 'Profile updated successfully!');
       context.pop();
     }
   }

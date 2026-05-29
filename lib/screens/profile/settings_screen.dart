@@ -7,9 +7,11 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/utils/snackbar_utils.dart';
 import '../../data/mock/mock_data.dart';
 import '../../providers/theme_provider.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../../widgets/gradient_button.dart';
 
 /// Profile screen with avatar, info, and quick links.
 class SettingsScreen extends ConsumerWidget {
@@ -19,9 +21,185 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.hhColors;
     final theme = Theme.of(context);
-    final student = MockData.studentProfile;
     final currentTheme = ref.watch(themeProvider);
     final isDark = currentTheme == ThemeMode.dark;
+    final isAuthenticated = ref.watch(isAuthenticatedProvider);
+
+    if (!isAuthenticated) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            AppStrings.profile,
+            style: AppTypography.titleLarge.copyWith(color: colors.textHigh),
+          ),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              const SizedBox(height: 32),
+
+              // ── Guest Avatar ──
+              Container(
+                    width: 88,
+                    height: 88,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: AppColors.primaryGradient,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.orangeBright.withValues(alpha: 0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.person_rounded,
+                        size: 44,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 400.ms)
+                  .scaleXY(
+                    begin: 0.7,
+                    end: 1,
+                    duration: 500.ms,
+                    curve: Curves.easeOutBack,
+                  ),
+
+              const SizedBox(height: 16),
+
+              Text(
+                    'Guest User',
+                    style: AppTypography.headlineSmall.copyWith(
+                      color: colors.textHigh,
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 350.ms, delay: 150.ms)
+                  .slideY(begin: 0.06, end: 0),
+              const SizedBox(height: 8),
+              Text(
+                'Login to edit or change profile',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodySmall.copyWith(color: colors.textLow),
+              ).animate().fadeIn(duration: 350.ms, delay: 250.ms),
+
+              const SizedBox(height: 24),
+
+              GradientButton(
+                text: 'Login / Sign Up',
+                onPressed: () => GoRouter.of(context).push('/login'),
+              ).animate().fadeIn(duration: 350.ms, delay: 350.ms),
+
+              const SizedBox(height: 32),
+
+              // ── Dark mode toggle & About (always visible) ──
+              Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: theme.colorScheme.outline),
+                    ),
+                    child: Column(
+                      children: [
+                        // Dark mode toggle
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          child: Row(
+                            children: [
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                transitionBuilder: (child, anim) =>
+                                    RotationTransition(
+                                      turns: Tween(
+                                        begin: 0.75,
+                                        end: 1.0,
+                                      ).animate(anim),
+                                      child: FadeTransition(
+                                        opacity: anim,
+                                        child: child,
+                                      ),
+                                    ),
+                                child: Icon(
+                                  isDark
+                                      ? Icons.dark_mode_rounded
+                                      : Icons.light_mode_rounded,
+                                  key: ValueKey(isDark),
+                                  size: 20,
+                                  color: AppColors.orangeBright,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Text(
+                                  AppStrings.darkMode,
+                                  style: AppTypography.titleSmall.copyWith(
+                                    color: colors.textHigh,
+                                  ),
+                                ),
+                              ),
+                              Switch(
+                                value: isDark,
+                                onChanged: (_) => ref
+                                    .read(themeProvider.notifier)
+                                    .toggleTheme(),
+                                activeThumbColor: AppColors.orangeBright,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Divider(height: 1, color: theme.colorScheme.outline),
+                        _ProfileTile(
+                          icon: Icons.info_outline_rounded,
+                          title: AppStrings.about,
+                          subtitle: AppStrings.version,
+                          colors: colors,
+                          onTap: () {
+                            showAboutDialog(
+                              context: context,
+                              applicationName: 'HostelHop',
+                              applicationVersion: AppStrings.version,
+                              applicationIcon: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: AppColors.primaryGradient,
+                                ),
+                                child: const Center(
+                                  child: Icon(Icons.location_on_rounded, color: Colors.white),
+                                ),
+                              ),
+                              children: [
+                                const SizedBox(height: 16),
+                                Text('HostelHop is the easiest way to find and book student accommodation.', style: AppTypography.bodyMedium.copyWith(color: colors.textMid)),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 400.ms, delay: 450.ms)
+                  .slideY(begin: 0.06, end: 0),
+
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final student = MockData.studentProfile;
 
     return Scaffold(
       appBar: AppBar(
@@ -130,12 +308,7 @@ class SettingsScreen extends ConsumerWidget {
                         title: 'Payment History',
                         colors: colors,
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Payment history feature coming soon', style: AppTypography.bodyMedium.copyWith(color: Colors.white)),
-                              backgroundColor: colors.surfaceElevated,
-                            ),
-                          );
+                          SnackBarUtils.show(context, 'Payment history feature coming soon');
                         },
                       ),
                     ],
@@ -211,12 +384,7 @@ class SettingsScreen extends ConsumerWidget {
                         title: AppStrings.pushNotifications,
                         colors: colors,
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Push notifications settings coming soon', style: AppTypography.bodyMedium.copyWith(color: Colors.white)),
-                              backgroundColor: colors.surfaceElevated,
-                            ),
-                          );
+                          SnackBarUtils.show(context, 'Push notifications settings coming soon');
                         },
                       ),
                       Divider(height: 1, color: theme.colorScheme.outline),

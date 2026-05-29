@@ -11,7 +11,11 @@ final weatherProvider = FutureProvider<WeatherInfo?>((ref) async {
   final weatherService = ref.read(weatherServiceProvider);
 
   try {
-    final position = await locationService.getCurrentPosition();
+    // Add a timeout to prevent hanging if location services are slow or unresponsive
+    final position = await locationService.getCurrentPosition().timeout(
+      const Duration(seconds: 5),
+      onTimeout: () => null,
+    );
     if (position != null) {
       return await weatherService.getCurrentWeather(
         position.latitude,

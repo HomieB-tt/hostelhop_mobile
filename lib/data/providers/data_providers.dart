@@ -37,3 +37,33 @@ final myBookingsProvider = FutureProvider<List<Booking>>((ref) async {
   final repository = ref.watch(bookingsRepositoryProvider);
   return repository.getMyBookings(user.id);
 });
+
+class SavedHostelsNotifier extends Notifier<List<String>> {
+  @override
+  List<String> build() => [];
+  
+  void toggle(String id) {
+    if (state.contains(id)) {
+      state = state.where((item) => item != id).toList();
+    } else {
+      state = [...state, id];
+    }
+  }
+}
+
+final savedHostelsProvider = NotifierProvider<SavedHostelsNotifier, List<String>>(SavedHostelsNotifier.new);
+
+class SavedRoomsNotifier extends Notifier<List<String>> {
+  @override
+  List<String> build() => [];
+  
+  void toggle(String id) {
+    if (state.contains(id)) {
+      state = state.where((item) => item != id).toList();
+    } else {
+      state = [...state, id];
+    }
+  }
+}
+
+final savedRoomsProvider = NotifierProvider<SavedRoomsNotifier, List<String>>(SavedRoomsNotifier.new);

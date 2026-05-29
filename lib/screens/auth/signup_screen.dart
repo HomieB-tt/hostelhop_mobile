@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/utils/validators.dart';
+import '../../core/utils/snackbar_utils.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../data/mock/mock_data.dart';
 import '../../widgets/gradient_button.dart';
@@ -61,22 +62,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedCampusId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select your university campus'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      SnackBarUtils.showError(context, 'Please select your university campus');
       return;
     }
 
     if (!_agreedToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please agree to the Terms & Conditions'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      SnackBarUtils.showError(context, 'Please agree to the Terms & Conditions');
       return;
     }
 
@@ -92,12 +83,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
     final authState = ref.read(authProvider);
     if (authState.errorMessage != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authState.errorMessage!),
-          backgroundColor: Colors.red,
-        ),
-      );
+      SnackBarUtils.showError(context, authState.errorMessage!);
     }
   }
 

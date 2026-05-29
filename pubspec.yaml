@@ -34,6 +34,7 @@ dependencies:
   google_places_flutter: ^2.0.6
   geolocator: ^14.0.2
   http: ^1.1.0
+  permission_handler: ^11.0.1
 
   # Image Handling
   image_picker: ^1.0.0

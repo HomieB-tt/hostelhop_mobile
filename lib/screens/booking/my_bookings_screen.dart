@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/utils/formatters.dart';
+import '../../data/models/models.dart';
 import '../../data/providers/data_providers.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/auth/providers/auth_provider.dart';
+import '../../widgets/gradient_button.dart';
+import '../hostel_detail/hostel_detail_screen.dart';
+import '../hostel_detail/room_detail_screen.dart';
 
 class MyBookingsScreen extends ConsumerWidget {
   const MyBookingsScreen({super.key});
@@ -15,57 +21,184 @@ class MyBookingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.hhColors;
-    final bookingsAsync = ref.watch(myBookingsProvider);
+    final isAuthenticated = ref.watch(isAuthenticatedProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.myBookings,
-            style: AppTypography.titleLarge.copyWith(color: colors.textHigh)),
-      ),
-      body: bookingsAsync.when(
-        data: (bookings) {
-          return bookings.isEmpty
-              ? _buildEmpty(colors)
-              : ListView.separated(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: bookings.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final b = bookings[index];
-                    return _BookingCard(booking: b, colors: colors, index: index);
-                  },
-                );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
+    if (!isAuthenticated) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(AppStrings.myBookings,
+              style: AppTypography.titleLarge.copyWith(color: colors.textHigh)),
+        ),
+        body: Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.cloud_off_rounded, size: 56,
+                Icon(Icons.calendar_today_outlined, size: 64,
                     color: colors.textLow.withValues(alpha: 0.4))
                     .animate().fadeIn(duration: 400.ms)
                     .scaleXY(begin: 0.8, end: 1, curve: Curves.easeOutBack),
                 const SizedBox(height: 16),
-                Text('Couldn\'t load bookings',
-                    style: AppTypography.titleMedium.copyWith(color: colors.textMid))
-                    .animate().fadeIn(duration: 350.ms, delay: 100.ms),
+                Text('Login to view your bookings',
+                    style: AppTypography.titleMedium.copyWith(color: colors.textHigh))
+                    .animate().fadeIn(duration: 350.ms, delay: 150.ms),
                 const SizedBox(height: 8),
-                Text('Pull down to refresh or try again later',
+                Text(
+                    'Sign in to see your booking history and manage reservations',
                     textAlign: TextAlign.center,
                     style: AppTypography.bodySmall.copyWith(color: colors.textLow))
-                    .animate().fadeIn(duration: 350.ms, delay: 200.ms),
+                    .animate().fadeIn(duration: 350.ms, delay: 250.ms),
                 const SizedBox(height: 24),
-                TextButton.icon(
-                  onPressed: () => ref.invalidate(myBookingsProvider),
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('Retry'),
-                  style: TextButton.styleFrom(foregroundColor: AppColors.orangeBright),
-                ).animate().fadeIn(duration: 350.ms, delay: 300.ms),
+                GradientButton(
+                  text: 'Login / Sign Up',
+                  onPressed: () => GoRouter.of(context).push('/login'),
+                ).animate().fadeIn(duration: 350.ms, delay: 350.ms),
               ],
             ),
           ),
+        ),
+      );
+    }
+
+    final bookingsAsync = ref.watch(myBookingsProvider);
+    final savedHostelIds = ref.watch(savedHostelsProvider);
+    final savedRoomIds = ref.watch(savedRoomsProvider);
+    final hostelsAsync = ref.watch(hostelsProvider);
+
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(AppStrings.myBookings,
+              style: AppTypography.titleLarge.copyWith(color: colors.textHigh)),
+          bottom: TabBar(
+            tabs: const [
+              Tab(text: 'Saved'),
+              Tab(text: 'Completed'),
+            ],
+            labelColor: AppColors.orangeBright,
+            unselectedLabelColor: colors.textLow,
+            indicatorColor: AppColors.orangeBright,
+            labelStyle: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.bold),
+            unselectedLabelStyle: AppTypography.titleSmall,
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            // Saved Tab
+            hostelsAsync.when(
+              data: (hostels) {
+                // Collect saved items (Hostel or Hostel+Room)
+                final savedItems = <({Hostel hostel, Room? room})>[];
+                
+                for (final h in hostels) {
+                  final savedRoomsInHostel = h.rooms.where((r) => savedRoomIds.contains(r.id)).toList();
+                  if (savedRoomsInHostel.isNotEmpty) {
+                    for (final r in savedRoomsInHostel) {
+                      savedItems.add((hostel: h, room: r));
+                    }
+                  } else if (savedHostelIds.contains(h.id)) {
+                    savedItems.add((hostel: h, room: null));
+                  }
+                }
+
+                return savedItems.isEmpty
+                    ? _buildEmptySaved(colors)
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(20),
+                        itemCount: savedItems.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final item = savedItems[index];
+                          return _SavedHostelCard(
+                            hostel: item.hostel, 
+                            room: item.room,
+                            colors: colors, 
+                            index: index
+                          );
+                        },
+                      );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, _) => Center(child: Text('Error: $err')),
+            ),
+
+            // Completed Tab
+            bookingsAsync.when(
+              data: (bookings) {
+                final completedBookings = bookings.where((b) => b.status == 'paid' || b.status == 'approved').toList();
+                return completedBookings.isEmpty
+                    ? _buildEmpty(colors)
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(20),
+                        itemCount: completedBookings.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final b = completedBookings[index];
+                          return _BookingCard(booking: b, colors: colors, index: index);
+                        },
+                      );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => _buildError(colors, ref),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptySaved(HostelHopColors colors) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.bookmark_border_rounded, size: 64,
+              color: colors.textLow.withValues(alpha: 0.4))
+              .animate().fadeIn(duration: 400.ms)
+              .scaleXY(begin: 0.8, end: 1, curve: Curves.easeOutBack),
+          const SizedBox(height: 16),
+          Text('No saved hostels',
+              style: AppTypography.titleMedium.copyWith(color: colors.textMid))
+              .animate().fadeIn(duration: 350.ms, delay: 150.ms),
+          const SizedBox(height: 8),
+          Text('Hostels you save will appear here',
+              style: AppTypography.bodySmall.copyWith(color: colors.textLow))
+              .animate().fadeIn(duration: 350.ms, delay: 250.ms),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildError(HostelHopColors colors, WidgetRef ref) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 56,
+                color: colors.textLow.withValues(alpha: 0.4))
+                .animate().fadeIn(duration: 400.ms)
+                .scaleXY(begin: 0.8, end: 1, curve: Curves.easeOutBack),
+            const SizedBox(height: 16),
+            Text('Couldn\'t load bookings',
+                style: AppTypography.titleMedium.copyWith(color: colors.textMid))
+                .animate().fadeIn(duration: 350.ms, delay: 100.ms),
+            const SizedBox(height: 8),
+            Text('Pull down to refresh or try again later',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodySmall.copyWith(color: colors.textLow))
+                .animate().fadeIn(duration: 350.ms, delay: 200.ms),
+            const SizedBox(height: 24),
+            TextButton.icon(
+              onPressed: () => ref.invalidate(myBookingsProvider),
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Retry'),
+              style: TextButton.styleFrom(foregroundColor: AppColors.orangeBright),
+            ).animate().fadeIn(duration: 350.ms, delay: 300.ms),
+          ],
         ),
       ),
     );
@@ -90,6 +223,112 @@ class MyBookingsScreen extends ConsumerWidget {
               .animate().fadeIn(duration: 350.ms, delay: 250.ms),
         ],
       ),
+    );
+  }
+}
+
+class _SavedHostelCard extends StatelessWidget {
+  const _SavedHostelCard({required this.hostel, this.room, required this.colors, required this.index});
+  final Hostel hostel;
+  final Room? room;
+  final HostelHopColors colors;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        if (room != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RoomDetailScreen(room: room!, hostel: hostel),
+            ),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HostelDetailScreen(hostel: hostel),
+            ),
+          );
+        }
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Theme.of(context).colorScheme.outline),
+        ),
+        child: Row(
+          children: [
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: hostel.images.isNotEmpty
+                    ? Image.network(hostel.images.first, width: 80, height: 80, fit: BoxFit.cover, errorBuilder: (_, _, _) => _buildPlaceholder())
+                    : _buildPlaceholder(),
+                ),
+                if (room != null)
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: AppColors.orangeBright,
+                        borderRadius: const BorderRadius.only(topLeft: Radius.circular(8), bottomRight: Radius.circular(12)),
+                      ),
+                      child: const Icon(Icons.bed_rounded, size: 12, color: Colors.white),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(hostel.name, style: AppTypography.titleSmall.copyWith(color: colors.textHigh, fontWeight: FontWeight.bold)),
+                  if (room != null) ...[
+                    const SizedBox(height: 2),
+                    Text('${room!.roomType}${room!.roomNumber.isNotEmpty ? ' · Room ${room!.roomNumber}' : ''}', 
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.orangeBright, fontWeight: FontWeight.w600, fontSize: 12)),
+                  ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on, size: 12, color: colors.textLow),
+                      const SizedBox(width: 4),
+                      Text(hostel.address, style: AppTypography.bodySmall.copyWith(color: colors.textMid, fontSize: 11)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    room != null 
+                      ? Formatters.formatUGX(room!.pricePerSemester)
+                      : 'From ${Formatters.formatUGX(hostel.startingPrice)}', 
+                    style: AppTypography.priceCompact.copyWith(color: colors.textHigh, fontSize: 13)
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: colors.textLow),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(delay: Duration(milliseconds: 100 * index)).slideX(begin: 0.1, end: 0);
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      width: 80,
+      height: 80,
+      color: AppColors.orangeBright.withValues(alpha: 0.1),
+      child: const Icon(Icons.apartment_rounded, color: AppColors.orangeBright),
     );
   }
 }

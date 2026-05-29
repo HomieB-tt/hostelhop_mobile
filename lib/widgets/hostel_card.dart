@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_theme.dart';
 import '../core/theme/app_typography.dart';
 import '../core/utils/formatters.dart';
 import '../data/models/models.dart';
+import '../data/providers/data_providers.dart';
+import '../features/auth/providers/auth_provider.dart';
 
 /// Hostel listing card with tap scale animation.
 class HostelCard extends StatefulWidget {
@@ -70,20 +74,57 @@ class _HostelCardState extends State<HostelCard>
             child: Row(
               children: [
                 // ── Thumbnail ──
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    width: 64,
-                    height: 64,
-                    color: colors.surfaceElevated,
-                    child: hostel.images.isNotEmpty
-                        ? Image.network(
-                            hostel.images.first,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => _buildPlaceholder(),
-                          )
-                        : _buildPlaceholder(),
-                  ),
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        color: colors.surfaceElevated,
+                        child: hostel.images.isNotEmpty
+                            ? Image.network(
+                                hostel.images.first,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => _buildPlaceholder(),
+                              )
+                            : _buildPlaceholder(),
+                      ),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Consumer(
+                        builder: (context, ref, _) {
+                          final savedIds = ref.watch(savedHostelsProvider);
+                          final isSaved = savedIds.contains(hostel.id);
+                          final isAuthenticated = ref.watch(isAuthenticatedProvider);
+
+                          return GestureDetector(
+                            onTap: () {
+                              if (isAuthenticated) {
+                                ref.read(savedHostelsProvider.notifier).toggle(hostel.id);
+                              } else {
+                                GoRouter.of(context).push('/login');
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                                color: isSaved ? AppColors.orangeBright : Colors.white,
+                                size: 14,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(width: 14),
