@@ -13,6 +13,7 @@ import '../../widgets/sun_meter.dart';
 import '../../widgets/hostel_card.dart';
 import '../../widgets/search_input.dart';
 import '../hostel_detail/hostel_detail_screen.dart';
+import 'all_hostels_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../providers/weather_provider.dart';
@@ -111,7 +112,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation, secondaryAnimation) =>
+                                  const AllHostelsScreen(),
+                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                return FadeTransition(opacity: animation, child: child);
+                              },
+                            ),
+                          );
+                        },
                         child: Text(
                           AppStrings.viewAll,
                           style: AppTypography.labelLarge.copyWith(
@@ -133,8 +145,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   final filteredHostels = hostels
                       .where((h) => h.isOnline)
                       .toList();
+                      
+                  // Sort: trending first (by viewCount desc)
+                  filteredHostels.sort((a, b) {
+                    if (a.isTrending && !b.isTrending) return -1;
+                    if (!a.isTrending && b.isTrending) return 1;
+                    if (a.isTrending && b.isTrending) return b.viewCount.compareTo(a.viewCount);
+                    return 0; // maintain original order for non-trending
+                  });
+                  
+                  // Limit to top 5 for home screen
+                  final displayHostels = filteredHostels.take(5).toList();
 
-                  if (filteredHostels.isEmpty) {
+                  if (displayHostels.isEmpty) {
                     return SliverFillRemaining(
                       hasScrollBody: false,
                       child: Center(
@@ -152,7 +175,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
-                          final hostel = filteredHostels[index];
+                          final hostel = displayHostels[index];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: HostelCard(
@@ -203,7 +226,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                           );
                         },
-                        childCount: filteredHostels.length,
+                        childCount: displayHostels.length,
                       ),
                     ),
                   );
@@ -316,9 +339,12 @@ class _CompactHeaderDelegate extends SliverPersistentHeaderDelegate {
                   const SizedBox(height: 14),
 
                   // Search bar
-                  SearchInput(
-                    readOnly: true,
-                    onTap: onSearchTap,
+                  Hero(
+                    tag: 'search_bar',
+                    child: SearchInput(
+                      readOnly: true,
+                      onTap: onSearchTap,
+                    ),
                   ),
                 ],
               ),
@@ -472,7 +498,13 @@ class _SunMeterDelegate extends SliverPersistentHeaderDelegate {
                           ],
                         );
                       },
-                      loading: () => const Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))),
+                      loading: () => const Center(
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
                       error: (err, stack) => const SizedBox(),
                     ),
                   ),
@@ -481,7 +513,7 @@ class _SunMeterDelegate extends SliverPersistentHeaderDelegate {
             ),
         ],
       ),
-     ),
-    );
+    ),
+  );
   }
 }

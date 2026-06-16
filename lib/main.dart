@@ -10,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
 import 'services/notifications_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'providers/shared_preferences_provider.dart';
 
 /// Must be a top-level function for Firebase background messaging.
 @pragma('vm:entry-point')
@@ -54,8 +56,16 @@ void main() async {
 
     // Initialize notifications
     await initializeNotifications();
+    
+    // Initialize Shared Preferences
+    final prefs = await SharedPreferences.getInstance();
 
-    runApp(const ProviderScope(child: HostelHopApp()));
+    runApp(ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
+      child: const HostelHopApp(),
+    ));
   } catch (e, stackTrace) {
     log('Initialization error: $e');
     log('Stack trace: $stackTrace');

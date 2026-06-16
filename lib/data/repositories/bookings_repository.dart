@@ -6,6 +6,23 @@ class BookingsRepository {
 
   BookingsRepository(this._supabase);
 
+  Future<String> createBooking({
+    required String studentId,
+    required String roomId,
+    required int amount,
+  }) async {
+    final response = await _supabase.from('bookings').insert({
+      'student_id': studentId,
+      'room_id': roomId,
+      'status': 'pending',
+      'amount': amount,
+      'check_in_date': DateTime.now().toIso8601String(),
+      'check_out_date': DateTime.now().add(const Duration(days: 120)).toIso8601String(),
+    }).select('id').single();
+    
+    return response['id'] as String;
+  }
+
   Future<List<Booking>> getMyBookings(String studentId) async {
     try {
       final response = await _supabase

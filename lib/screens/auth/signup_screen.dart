@@ -10,8 +10,10 @@ import '../../core/constants/app_strings.dart';
 import '../../core/utils/validators.dart';
 import '../../core/utils/snackbar_utils.dart';
 import '../../features/auth/providers/auth_provider.dart';
-import '../../data/mock/mock_data.dart';
 import '../../widgets/gradient_button.dart';
+import 'package:google_places_flutter/google_places_flutter.dart';
+import 'package:google_places_flutter/model/prediction.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -27,9 +29,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _campusController = TextEditingController();
 
-  String? _selectedUniversityId;
-  String? _selectedCampusId;
+  String? _selectedCampusName;
 
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
@@ -55,14 +57,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _campusController.dispose();
     super.dispose();
   }
 
   Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_selectedCampusId == null) {
-      SnackBarUtils.showError(context, 'Please select your university campus');
+    if (_selectedCampusName == null || _selectedCampusName!.isEmpty) {
+      SnackBarUtils.showError(context, 'Please search and select your university/campus');
       return;
     }
 
@@ -78,7 +81,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           _passwordController.text,
           _nameController.text.trim(),
           _phoneController.text.trim(),
-          _selectedCampusId!,
+          _selectedCampusName!,
         );
 
     final authState = ref.read(authProvider);
@@ -294,51 +297,47 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // University Selection
-                      _buildFieldLabel('University'),
-                      _buildDropdown<String>(
-                        value: _selectedUniversityId,
-                        hint: 'Select your university',
-                        items: MockData.universities.map((u) {
-                          return DropdownMenuItem<String>(
-                            value: u['id'] as String,
-                            child: Text(u['name'] as String),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          setState(() {
-                            _selectedUniversityId = val;
-                            _selectedCampusId = null; // Reset campus
-                          });
+                      // University / Campus Selection via Google Places
+                      _buildFieldLabel('University / Campus'),
+                      GooglePlaceAutoCompleteTextField(
+                        textEditingController: _campusController,
+                        googleAPIKey: dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '',
+                        inputDecoration: _inputDecoration(
+                          hint: 'Search university or campus',
+                          icon: Icons.school_outlined,
+                        ),
+                        debounceTime: 800,
+                        countries: ["ug"],
+                        isLatLngRequired: false,
+                        getPlaceDetailWithLatLng: (Prediction prediction) {
+                          _selectedCampusName = prediction.description;
                         },
-                        icon: Icons.school_outlined,
+                        itemClick: (Prediction prediction) {
+                          _campusController.text = prediction.description ?? '';
+                          _campusController.selection = TextSelection.fromPosition(
+                              TextPosition(offset: prediction.description?.length ?? 0));
+                          _selectedCampusName = prediction.description;
+                        },
+                        seperatedBuilder: const Divider(),
+                        itemBuilder: (context, index, Prediction prediction) {
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                Icon(Icons.location_on_outlined, color: colors.textLow, size: 20),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    prediction.description ?? "",
+                                    style: AppTypography.bodyMedium.copyWith(color: colors.textHigh),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 20),
-
-                      // Campus Selection
-                      if (_selectedUniversityId != null) ...[
-                        _buildFieldLabel('Campus'),
-                        _buildDropdown<String>(
-                          value: _selectedCampusId,
-                          hint: 'Select your campus',
-                          items: MockData.campuses
-                              .where(
-                                (c) => c['univId'] == _selectedUniversityId,
-                              )
-                              .map((c) {
-                                return DropdownMenuItem<String>(
-                                  value: c['id'] as String,
-                                  child: Text(c['name'] as String),
-                                );
-                              })
-                              .toList(),
-                          onChanged: (val) {
-                            setState(() => _selectedCampusId = val);
-                          },
-                          icon: Icons.location_on_outlined,
-                        ),
-                        const SizedBox(height: 20),
-                      ],
 
                       // Password
                       _buildFieldLabel('Password'),
@@ -569,45 +568,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         borderSide: const BorderSide(color: AppColors.error, width: 1),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-    );
-  }
-
-  Widget _buildDropdown<T>({
-    required T? value,
-    required String hint,
-    required List<DropdownMenuItem<T>> items,
-    required ValueChanged<T?> onChanged,
-    required IconData icon,
-  }) {
-    final colors = context.hhColors;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: colors.surfaceElevated.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          value: value,
-          hint: Row(
-            children: [
-              Icon(icon, color: colors.textLow, size: 20),
-              const SizedBox(width: 12),
-              Text(
-                hint,
-                style: AppTypography.bodyMedium.copyWith(color: colors.textLow),
-              ),
-            ],
-          ),
-          isExpanded: true,
-          items: items,
-          onChanged: onChanged,
-          icon: Icon(Icons.keyboard_arrow_down_rounded, color: colors.textLow),
-          borderRadius: BorderRadius.circular(16),
-          dropdownColor: colors.surface,
-          style: AppTypography.bodyMedium.copyWith(color: colors.textHigh),
-        ),
-      ),
     );
   }
 }

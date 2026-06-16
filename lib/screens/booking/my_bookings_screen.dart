@@ -388,8 +388,27 @@ class _BookingCard extends StatelessWidget {
             ),
           ]),
           const SizedBox(height: 8),
-          Text(Formatters.formatUGX(booking.amount),
-              style: AppTypography.priceCompact.copyWith(color: colors.textHigh)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Rent Paid', style: AppTypography.bodySmall.copyWith(color: colors.textLow, fontSize: 10)),
+                  Text(Formatters.formatUGX(booking.amount),
+                      style: AppTypography.priceCompact.copyWith(color: colors.textHigh)),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('Transaction ID', style: AppTypography.bodySmall.copyWith(color: colors.textLow, fontSize: 10)),
+                  Text(booking.id.length > 8 ? booking.id.substring(0, 8).toUpperCase() : booking.id.toUpperCase(),
+                      style: AppTypography.labelSmall.copyWith(color: colors.textMid, fontFamily: 'monospace')),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
     )

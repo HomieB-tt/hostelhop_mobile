@@ -14,6 +14,7 @@ class Hostel {
     this.distanceFromCampus,
     this.createdAt,
     this.isOnline = true,
+    this.viewCount = 0,
   });
 
   factory Hostel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +27,7 @@ class Hostel {
       images: List<String>.from(json['images'] ?? []),
       ownerId: json['owner_id'] as String,
       isOnline: json['is_online'] as bool? ?? true,
+      viewCount: (json['view_count'] as num?)?.toInt() ?? 0,
       rooms: (json['rooms'] as List<dynamic>?)
               ?.map((e) => Room.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -47,6 +49,10 @@ class Hostel {
   final String? distanceFromCampus;
   final DateTime? createdAt;
   final bool isOnline;
+  final int viewCount;
+
+  /// Whether this hostel is trending (viewed by many users).
+  bool get isTrending => viewCount >= 10;
 
   /// Number of available rooms.
   int get availableRooms => rooms.fold(0, (sum, r) => sum + (r.isAvailable && !r.isUnderMaintenance ? (r.maxOccupancy - r.currentOccupancy) : 0));
@@ -85,6 +91,7 @@ class Room {
     required this.hostelId,
     this.roomNumber = '',
     this.isUnderMaintenance = false,
+    this.description = '',
   });
 
   factory Room.fromJson(Map<String, dynamic> json) {
@@ -98,6 +105,7 @@ class Room {
       isUnderMaintenance: json['is_under_maintenance'] as bool? ?? false,
       hostelId: json['hostel_id'] as String,
       roomNumber: json['room_number'] as String? ?? '',
+      description: json['description'] as String? ?? '',
     );
   }
 
@@ -110,6 +118,7 @@ class Room {
   final String hostelId;
   final String roomNumber;
   final bool isUnderMaintenance;
+  final String description;
 }
 
 /// Booking model.
@@ -175,6 +184,7 @@ class StudentProfile {
     this.university,
     this.campusId,
     this.avatarInitials,
+    this.isPhoneConfirmed = false,
     this.createdAt,
   });
 
@@ -186,6 +196,7 @@ class StudentProfile {
   final String? university;
   final String? campusId;
   final String? avatarInitials;
+  final bool isPhoneConfirmed;
   final DateTime? createdAt;
 }
 

@@ -6,15 +6,18 @@ import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
 import '../../widgets/loading_dots.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/onboarding_provider.dart';
+
 /// Splash screen with orange gradient, animated sun orb, and loading dots.
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
   late final AnimationController _pulseController;
   late final AnimationController _fadeController;
@@ -49,7 +52,12 @@ class _SplashScreenState extends State<SplashScreen>
     // Navigate after delay.
     Future.delayed(const Duration(milliseconds: 2800), () {
       if (mounted) {
-        context.go('/onboarding');
+        final hasCompletedOnboarding = ref.read(onboardingProvider);
+        if (hasCompletedOnboarding) {
+          context.go('/home');
+        } else {
+          context.go('/onboarding');
+        }
       }
     });
   }

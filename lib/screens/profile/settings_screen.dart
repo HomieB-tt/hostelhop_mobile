@@ -8,7 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/utils/snackbar_utils.dart';
-import '../../data/mock/mock_data.dart';
+import '../../data/providers/data_providers.dart';
 import '../../providers/theme_provider.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../widgets/gradient_button.dart';
@@ -199,259 +199,278 @@ class SettingsScreen extends ConsumerWidget {
       );
     }
 
-    final student = MockData.studentProfile;
+    final profileAsync = ref.watch(currentProfileProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          AppStrings.profile,
-          style: AppTypography.titleLarge.copyWith(color: colors.textHigh),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings_outlined, color: colors.textMid),
-            onPressed: () {},
-          ),
-        ],
+    return profileAsync.when(
+      loading: () => Scaffold(
+        appBar: AppBar(title: Text(AppStrings.profile, style: AppTypography.titleLarge.copyWith(color: colors.textHigh))),
+        body: const Center(child: CircularProgressIndicator()),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // ── Avatar ──
-            Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppColors.primaryGradient,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.orangeBright.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 6),
+      error: (_, _) => Scaffold(
+        appBar: AppBar(title: Text(AppStrings.profile, style: AppTypography.titleLarge.copyWith(color: colors.textHigh))),
+        body: const Center(child: Text('Failed to load profile')),
+      ),
+      data: (student) {
+        final displayStudent = student;
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              AppStrings.profile,
+              style: AppTypography.titleLarge.copyWith(color: colors.textHigh),
+            ),
+            actions: [
+              IconButton(
+                icon: Icon(Icons.settings_outlined, color: colors.textMid),
+                onPressed: () {},
+              ),
+            ],
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                // ── Avatar ──
+                Container(
+                      width: 88,
+                      height: 88,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: AppColors.primaryGradient,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.orangeBright.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      student.avatarInitials ?? 'BS',
-                      style: AppTypography.headlineMedium.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                )
-                .animate()
-                .fadeIn(duration: 400.ms)
-                .scaleXY(
-                  begin: 0.7,
-                  end: 1,
-                  duration: 500.ms,
-                  curve: Curves.easeOutBack,
-                ),
-
-            const SizedBox(height: 16),
-
-            Text(
-                  student.fullName,
-                  style: AppTypography.headlineSmall.copyWith(
-                    color: colors.textHigh,
-                  ),
-                )
-                .animate()
-                .fadeIn(duration: 350.ms, delay: 150.ms)
-                .slideY(begin: 0.06, end: 0),
-            const SizedBox(height: 4),
-            Text(
-              student.university ?? '',
-              style: AppTypography.bodyMedium.copyWith(color: colors.textMid),
-            ).animate().fadeIn(duration: 350.ms, delay: 220.ms),
-            const SizedBox(height: 4),
-            Text(
-              student.phone,
-              style: AppTypography.bodySmall.copyWith(color: colors.textLow),
-            ).animate().fadeIn(duration: 350.ms, delay: 280.ms),
-
-            const SizedBox(height: 28),
-
-            // ── Info card ──
-            Container(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: theme.colorScheme.outline),
-                  ),
-                  child: Column(
-                    children: [
-                      _ProfileTile(
-                        icon: Icons.person_outline_rounded,
-                        title: AppStrings.editProfile,
-                        colors: colors,
-                        onTap: () {
-                          GoRouter.of(context).go('/settings/edit-profile');
-                        },
-                      ),
-                      Divider(height: 1, color: theme.colorScheme.outline),
-                      _ProfileTile(
-                        icon: Icons.calendar_today_outlined,
-                        title: AppStrings.myBookings,
-                        colors: colors,
-                        onTap: () {
-                          GoRouter.of(context).go('/bookings');
-                        },
-                      ),
-                      Divider(height: 1, color: theme.colorScheme.outline),
-                      _ProfileTile(
-                        icon: Icons.receipt_long_outlined,
-                        title: 'Payment History',
-                        colors: colors,
-                        onTap: () {
-                          SnackBarUtils.show(context, 'Payment history feature coming soon');
-                        },
-                      ),
-                    ],
-                  ),
-                )
-                .animate()
-                .fadeIn(duration: 400.ms, delay: 350.ms)
-                .slideY(begin: 0.06, end: 0),
-
-            const SizedBox(height: 16),
-
-            // ── Settings ──
-            Container(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: theme.colorScheme.outline),
-                  ),
-                  child: Column(
-                    children: [
-                      // Dark mode toggle
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 4,
+                      child: Center(
+                        child: Text(
+                          displayStudent?.avatarInitials ??
+                              (displayStudent?.fullName.isNotEmpty == true
+                                  ? displayStudent!.fullName[0].toUpperCase()
+                                  : '?'),
+                          style: AppTypography.headlineMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
-                        child: Row(
-                          children: [
-                            AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 300),
-                              transitionBuilder: (child, anim) =>
-                                  RotationTransition(
-                                    turns: Tween(
-                                      begin: 0.75,
-                                      end: 1.0,
-                                    ).animate(anim),
-                                    child: FadeTransition(
-                                      opacity: anim,
-                                      child: child,
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(duration: 400.ms)
+                    .scaleXY(
+                      begin: 0.7,
+                      end: 1,
+                      duration: 500.ms,
+                      curve: Curves.easeOutBack,
+                    ),
+
+                const SizedBox(height: 16),
+
+                Text(
+                      displayStudent?.fullName ?? '',
+                      style: AppTypography.headlineSmall.copyWith(
+                        color: colors.textHigh,
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(duration: 350.ms, delay: 150.ms)
+                    .slideY(begin: 0.06, end: 0),
+                const SizedBox(height: 4),
+                Text(
+                  displayStudent?.university ?? '',
+                  style: AppTypography.bodyMedium.copyWith(color: colors.textMid),
+                ).animate().fadeIn(duration: 350.ms, delay: 220.ms),
+                const SizedBox(height: 4),
+                Text(
+                  displayStudent?.phone ?? '',
+                  style: AppTypography.bodySmall.copyWith(color: colors.textLow),
+                ).animate().fadeIn(duration: 350.ms, delay: 280.ms),
+
+                const SizedBox(height: 28),
+
+                // ── Info card ──
+                Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: theme.colorScheme.outline),
+                      ),
+                      child: Column(
+                        children: [
+                          _ProfileTile(
+                            icon: Icons.person_outline_rounded,
+                            title: AppStrings.editProfile,
+                            colors: colors,
+                            onTap: () {
+                              GoRouter.of(context).go('/settings/edit-profile');
+                            },
+                          ),
+                          Divider(height: 1, color: theme.colorScheme.outline),
+                          _ProfileTile(
+                            icon: Icons.calendar_today_outlined,
+                            title: AppStrings.myBookings,
+                            colors: colors,
+                            onTap: () {
+                              GoRouter.of(context).go('/bookings');
+                            },
+                          ),
+                          Divider(height: 1, color: theme.colorScheme.outline),
+                          _ProfileTile(
+                            icon: Icons.receipt_long_outlined,
+                            title: 'Payment History',
+                            colors: colors,
+                            onTap: () {
+                              SnackBarUtils.show(context, 'Payment history feature coming soon');
+                            },
+                          ),
+                        ],
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(duration: 400.ms, delay: 350.ms)
+                    .slideY(begin: 0.06, end: 0),
+
+                const SizedBox(height: 16),
+
+                // ── Settings ──
+                Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: theme.colorScheme.outline),
+                      ),
+                      child: Column(
+                        children: [
+                          // Dark mode toggle
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
+                            child: Row(
+                              children: [
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 300),
+                                  transitionBuilder: (child, anim) =>
+                                      RotationTransition(
+                                        turns: Tween(
+                                          begin: 0.75,
+                                          end: 1.0,
+                                        ).animate(anim),
+                                        child: FadeTransition(
+                                          opacity: anim,
+                                          child: child,
+                                        ),
+                                      ),
+                                  child: Icon(
+                                    isDark
+                                        ? Icons.dark_mode_rounded
+                                        : Icons.light_mode_rounded,
+                                    key: ValueKey(isDark),
+                                    size: 20,
+                                    color: AppColors.orangeBright,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Text(
+                                    AppStrings.darkMode,
+                                    style: AppTypography.titleSmall.copyWith(
+                                      color: colors.textHigh,
                                     ),
                                   ),
-                              child: Icon(
-                                isDark
-                                    ? Icons.dark_mode_rounded
-                                    : Icons.light_mode_rounded,
-                                key: ValueKey(isDark),
-                                size: 20,
-                                color: AppColors.orangeBright,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Text(
-                                AppStrings.darkMode,
-                                style: AppTypography.titleSmall.copyWith(
-                                  color: colors.textHigh,
                                 ),
-                              ),
+                                Switch(
+                                  value: isDark,
+                                  onChanged: (_) => ref
+                                      .read(themeProvider.notifier)
+                                      .toggleTheme(),
+                                  activeThumbColor: AppColors.orangeBright,
+                                ),
+                              ],
                             ),
-                            Switch(
-                              value: isDark,
-                              onChanged: (_) => ref
-                                  .read(themeProvider.notifier)
-                                  .toggleTheme(),
-                              activeThumbColor: AppColors.orangeBright,
-                            ),
-                          ],
-                        ),
+                          ),
+                          Divider(height: 1, color: theme.colorScheme.outline),
+                          _ProfileTile(
+                            icon: Icons.notifications_none_rounded,
+                            title: AppStrings.pushNotifications,
+                            colors: colors,
+                            onTap: () {
+                              SnackBarUtils.show(context, 'Push notifications settings coming soon');
+                            },
+                          ),
+                          Divider(height: 1, color: theme.colorScheme.outline),
+                          _ProfileTile(
+                            icon: Icons.info_outline_rounded,
+                            title: AppStrings.about,
+                            subtitle: AppStrings.version,
+                            colors: colors,
+                            onTap: () {
+                              showAboutDialog(
+                                context: context,
+                                applicationName: 'HostelHop',
+                                applicationVersion: AppStrings.version,
+                                applicationIcon: Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: AppColors.primaryGradient,
+                                  ),
+                                  child: const Center(
+                                    child: Icon(Icons.location_on_rounded, color: Colors.white),
+                                  ),
+                                ),
+                                children: [
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'HostelHop is the easiest way to find and book student accommodation.',
+                                    style: AppTypography.bodyMedium.copyWith(color: colors.textMid),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
                       ),
-                      Divider(height: 1, color: theme.colorScheme.outline),
-                      _ProfileTile(
-                        icon: Icons.notifications_none_rounded,
-                        title: AppStrings.pushNotifications,
+                    )
+                    .animate()
+                    .fadeIn(duration: 400.ms, delay: 450.ms)
+                    .slideY(begin: 0.06, end: 0),
+
+                const SizedBox(height: 16),
+
+                // ── Sign Out ──
+                Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: theme.colorScheme.outline),
+                      ),
+                      child: _ProfileTile(
+                        icon: Icons.logout_rounded,
+                        title: AppStrings.signOut,
                         colors: colors,
+                        isDestructive: true,
                         onTap: () {
-                          SnackBarUtils.show(context, 'Push notifications settings coming soon');
+                          ref.read(authProvider.notifier).signOut();
+                          GoRouter.of(context).go('/login');
                         },
                       ),
-                      Divider(height: 1, color: theme.colorScheme.outline),
-                      _ProfileTile(
-                        icon: Icons.info_outline_rounded,
-                        title: AppStrings.about,
-                        subtitle: AppStrings.version,
-                        colors: colors,
-                        onTap: () {
-                          showAboutDialog(
-                            context: context,
-                            applicationName: 'HostelHop',
-                            applicationVersion: AppStrings.version,
-                            applicationIcon: Container(
-                              width: 50,
-                              height: 50,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: AppColors.primaryGradient,
-                              ),
-                              child: const Center(
-                                child: Icon(Icons.location_on_rounded, color: Colors.white),
-                              ),
-                            ),
-                            children: [
-                              const SizedBox(height: 16),
-                              Text('HostelHop is the easiest way to find and book student accommodation.', style: AppTypography.bodyMedium.copyWith(color: colors.textMid)),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                )
-                .animate()
-                .fadeIn(duration: 400.ms, delay: 450.ms)
-                .slideY(begin: 0.06, end: 0),
+                    )
+                    .animate()
+                    .fadeIn(duration: 400.ms, delay: 550.ms)
+                    .slideY(begin: 0.06, end: 0),
 
-            const SizedBox(height: 16),
-
-            // ── Sign Out ──
-            Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: theme.colorScheme.outline),
-                  ),
-                  child: _ProfileTile(
-                    icon: Icons.logout_rounded,
-                    title: AppStrings.signOut,
-                    colors: colors,
-                    isDestructive: true,
-                    onTap: () {
-                      ref.read(authProvider.notifier).signOut();
-                      GoRouter.of(context).go('/login');
-                    },
-                  ),
-                )
-                .animate()
-                .fadeIn(duration: 400.ms, delay: 550.ms)
-                .slideY(begin: 0.06, end: 0),
-
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

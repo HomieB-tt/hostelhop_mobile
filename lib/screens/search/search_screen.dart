@@ -69,37 +69,45 @@ class _SearchScreenState extends State<SearchScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Search',
-                  style: AppTypography.displaySmall.copyWith(
-                    color: Colors.white,
+                Center(
+                  child: Text(
+                    'Search',
+                    style: AppTypography.headlineLarge.copyWith(
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 
                 // Glassmorphism Search Input
-                SearchInput(
-                  controller: _searchController,
-                  focusNode: _searchFocus,
-                  onChanged: (value) => setState(() {}),
-                  onSubmitted: (value) {
-                    if (value.trim().isNotEmpty && !_recentSearches.contains(value.trim())) {
-                      setState(() {
-                        _recentSearches.insert(0, value.trim());
-                        if (_recentSearches.length > 8) {
-                          _recentSearches.removeLast();
+                Hero(
+                  tag: 'search_bar',
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: SearchInput(
+                      controller: _searchController,
+                      focusNode: _searchFocus,
+                      onChanged: (value) => setState(() {}),
+                      onSubmitted: (value) {
+                        if (value.trim().isNotEmpty && !_recentSearches.contains(value.trim())) {
+                          setState(() {
+                            _recentSearches.insert(0, value.trim());
+                            if (_recentSearches.length > 8) {
+                              _recentSearches.removeLast();
+                            }
+                          });
                         }
-                      });
-                    }
-                  },
-                  onFilterTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => const FilterSheet(),
-                    );
-                  },
+                      },
+                      onFilterTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => const FilterSheet(),
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ],
             ),

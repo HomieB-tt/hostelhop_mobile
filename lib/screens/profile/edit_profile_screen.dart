@@ -5,8 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
+import 'package:google_places_flutter/google_places_flutter.dart';
+import 'package:google_places_flutter/model/prediction.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import '../../core/utils/snackbar_utils.dart';
-import '../../data/mock/mock_data.dart';
+import '../../data/providers/data_providers.dart';
+import '../../features/auth/providers/auth_provider.dart';
+import '../../widgets/otp_verification_sheet.dart';
 
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -24,22 +30,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _emailController;
   late TextEditingController _studentNumberController;
 
-  String? _selectedUniversity;
-  String? _selectedCampus;
+  late TextEditingController _campusController;
+
+  String? _selectedCampusName;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    // Load existing profile data
-    final student = MockData.studentProfile;
-    _nameController = TextEditingController(text: student.fullName);
-    _phoneController = TextEditingController(text: student.phone);
-    _emailController = TextEditingController(text: student.email);
-    _studentNumberController = TextEditingController(text: student.studentNumber);
-    _selectedUniversity = student.university;
-    _selectedCampus = student.campusId; // Using campus name temporarily for UI if ID doesn't match
-    
-    // In a real app we'd map campusId to the actual campus name from the list
+    _nameController = TextEditingController();
+    _phoneController = TextEditingController();
+    _emailController = TextEditingController();
+    _studentNumberController = TextEditingController();
+    _campusController = TextEditingController();
   }
 
   @override
@@ -48,40 +51,88 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _phoneController.dispose();
     _emailController.dispose();
     _studentNumberController.dispose();
+    _campusController.dispose();
     super.dispose();
   }
 
-  void _saveProfile() {
+  Future<void> _saveProfile(String userId) async {
     if (_formKey.currentState!.validate()) {
-      // In a real app we would update state/backend here.
-      // For now we just go back and show a success message.
-      SnackBarUtils.showSuccess(context, 'Profile updated successfully!');
-      context.pop();
+      if (_selectedCampusName == null || _selectedCampusName!.isEmpty) {
+        SnackBarUtils.showError(context, 'Please search and select your university/campus');
+        return;
+      }
+
+      try {
+        await ref.read(profileRepositoryProvider).updateProfile(
+              userId: userId,
+              fullName: _nameController.text.trim(),
+              phone: _phoneController.text.trim(),
+              email: _emailController.text.trim(),
+              studentNumber: _studentNumberController.text.trim(),
+              campusId: _selectedCampusName,
+            );
+        // ignore: unused_result
+        ref.refresh(currentProfileProvider);
+        if (mounted) {
+          SnackBarUtils.showSuccess(context, 'Profile updated successfully!');
+          context.pop();
+        }
+      } catch (e) {
+        if (mounted) SnackBarUtils.showError(context, 'Failed to update profile');
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.hhColors;
-    
-    return Scaffold(
-      backgroundColor: colors.background,
-      appBar: AppBar(
-        title: Text(
-          'Edit Profile',
-          style: AppTypography.titleLarge.copyWith(color: colors.textHigh),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _saveProfile,
-            child: Text(
-              'Save',
-              style: AppTypography.labelLarge.copyWith(color: AppColors.orangeBright),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
+    final user = ref.watch(currentUserProvider);
+    final profileAsync = ref.watch(currentProfileProvider);
+
+    if (user == null) {
+      return const Scaffold(body: Center(child: Text('Not logged in')));
+    }
+
+    return profileAsync.when(
+      loading: () => Scaffold(
+        backgroundColor: colors.background,
+        appBar: AppBar(title: Text('Edit Profile', style: AppTypography.titleLarge.copyWith(color: colors.textHigh))),
+        body: const Center(child: CircularProgressIndicator()),
       ),
+      error: (_, _) => Scaffold(
+        backgroundColor: colors.background,
+        appBar: AppBar(title: Text('Edit Profile', style: AppTypography.titleLarge.copyWith(color: colors.textHigh))),
+        body: const Center(child: Text('Failed to load profile')),
+      ),
+      data: (student) {
+        if (!_isInitialized && student != null) {
+          _nameController.text = student.fullName;
+          _phoneController.text = student.phone;
+          _emailController.text = student.email ?? '';
+          _studentNumberController.text = student.studentNumber ?? '';
+          _selectedCampusName = student.campusId;
+          _campusController.text = student.campusId ?? '';
+          _isInitialized = true;
+        }
+
+        return Scaffold(
+          backgroundColor: colors.background,
+          appBar: AppBar(
+            title: Text(
+              'Edit Profile',
+              style: AppTypography.titleLarge.copyWith(color: colors.textHigh),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => _saveProfile(user.id),
+                child: Text(
+                  'Save',
+                  style: AppTypography.labelLarge.copyWith(color: AppColors.orangeBright),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+          ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -101,7 +152,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          MockData.studentProfile.avatarInitials ?? 'BS',
+                          student?.avatarInitials ?? 'BS',
                           style: AppTypography.displaySmall.copyWith(color: Colors.white),
                         ),
                       ),
@@ -109,14 +160,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     Positioned(
                       bottom: 0,
                       right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: colors.surfaceElevated,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: colors.border),
+                      child: GestureDetector(
+                        onTap: () {
+                          SnackBarUtils.showError(context, 'Camera functionality not yet implemented');
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: colors.surfaceElevated,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: colors.border),
+                          ),
+                          child: Icon(Icons.camera_alt_rounded, size: 16, color: colors.textMid),
                         ),
-                        child: Icon(Icons.camera_alt_rounded, size: 16, color: colors.textMid),
                       ),
                     ),
                   ],
@@ -147,6 +203,24 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 keyboardType: TextInputType.phone,
                 validator: (val) => val == null || val.isEmpty ? 'Required' : null,
               ),
+              if (student != null && !student.isPhoneConfirmed) ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () async {
+                    final confirmed = await showModalBottomSheet<bool>(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => OTPVerificationSheet(phoneNumber: student.phone),
+                    );
+                    if (confirmed == true) {
+                      // ignore: unused_result
+                      ref.refresh(currentProfileProvider);
+                    }
+                  },
+                  child: const Text('Confirm Phone Number'),
+                ),
+              ],
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _emailController,
@@ -167,39 +241,67 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               
               _buildTextField(
                 controller: _studentNumberController,
-                label: 'Student Number',
+                label: 'Student Number (Optional)',
                 icon: Icons.badge_outlined,
                 colors: colors,
-                validator: (val) => val == null || val.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-              
-              // University Dropdown
-              _buildDropdownField(
-                value: _selectedUniversity,
-                label: 'University',
-                icon: Icons.school_outlined,
-                items: MockData.universities.map((u) => u['name'] as String).toList(),
-                colors: colors,
-                onChanged: (val) {
-                  setState(() {
-                    _selectedUniversity = val;
-                    // Reset campus when university changes
-                    _selectedCampus = null;
-                  });
+              // University / Campus AutoComplete
+              Text(
+                'University / Campus',
+                style: AppTypography.bodySmall.copyWith(color: colors.textLow),
+              ),
+              const SizedBox(height: 8),
+              GooglePlaceAutoCompleteTextField(
+                textEditingController: _campusController,
+                googleAPIKey: dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '',
+                inputDecoration: InputDecoration(
+                  hintText: 'Search university or campus',
+                  prefixIcon: Icon(Icons.school_outlined, size: 20, color: colors.textMid),
+                  filled: true,
+                  fillColor: colors.surfaceElevated,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: colors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: colors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: AppColors.orangeBright),
+                  ),
+                ),
+                debounceTime: 800,
+                countries: const ["ug"],
+                isLatLngRequired: false,
+                getPlaceDetailWithLatLng: (Prediction prediction) {
+                  _selectedCampusName = prediction.description;
                 },
-              ),
-              const SizedBox(height: 16),
-              
-              // Campus Dropdown
-              _buildDropdownField(
-                value: _selectedCampus,
-                label: 'Campus',
-                icon: Icons.business_outlined,
-                items: MockData.campuses.map((c) => c['name'] as String).toList(),
-                colors: colors,
-                onChanged: (val) {
-                  setState(() => _selectedCampus = val);
+                itemClick: (Prediction prediction) {
+                  _campusController.text = prediction.description ?? '';
+                  _campusController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: prediction.description?.length ?? 0));
+                  _selectedCampusName = prediction.description;
+                },
+                seperatedBuilder: const Divider(),
+                itemBuilder: (context, index, Prediction prediction) {
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Icon(Icons.location_on_outlined, color: colors.textLow, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            prediction.description ?? "",
+                            style: AppTypography.bodyMedium.copyWith(color: colors.textHigh),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
               
@@ -208,6 +310,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ),
         ),
       ),
+    );
+      },
     );
   }
 
@@ -246,48 +350,4 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  Widget _buildDropdownField({
-    required String? value,
-    required String label,
-    required IconData icon,
-    required List<String> items,
-    required HostelHopColors colors,
-    required void Function(String?) onChanged,
-  }) {
-    // Ensure value is in items, else set to null to avoid assert error
-    final safeValue = items.contains(value) ? value : null;
-    
-    return DropdownButtonFormField<String>(
-      initialValue: safeValue,
-      icon: Icon(Icons.arrow_drop_down_rounded, color: colors.textMid),
-      style: AppTypography.bodyMedium.copyWith(color: colors.textHigh),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: AppTypography.bodySmall.copyWith(color: colors.textLow),
-        prefixIcon: Icon(icon, size: 20, color: colors.textMid),
-        filled: true,
-        fillColor: colors.surfaceElevated,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: colors.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: colors.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.orangeBright),
-        ),
-      ),
-      dropdownColor: colors.surfaceElevated,
-      items: items.map((item) {
-        return DropdownMenuItem(
-          value: item,
-          child: Text(item),
-        );
-      }).toList(),
-      onChanged: onChanged,
-    );
-  }
 }

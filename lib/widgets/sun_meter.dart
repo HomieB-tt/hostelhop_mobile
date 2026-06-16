@@ -6,7 +6,6 @@ import '../core/theme/app_colors.dart';
 import '../core/theme/app_theme.dart';
 import '../core/theme/app_typography.dart';
 import '../core/constants/app_strings.dart';
-import '../data/mock/mock_data.dart';
 
 /// Sun Meter — compact weather gauge card for the home screen.
 ///
@@ -37,30 +36,48 @@ class SunMeter extends ConsumerWidget {
     return weatherAsync.when(
       data: (weather) {
         final temp = temperature ??
-            (weather?.temperature.toInt() ?? MockData.weatherTemp);
+            (weather?.temperature.toInt() ?? 0);
         final feels = feelsLike ??
-            (weather?.feelsLike.toInt() ?? MockData.weatherFeelsLike);
+            (weather?.feelsLike.toInt() ?? 0);
         final loc =
-            location ?? (weather?.location ?? MockData.weatherLocation);
+            location ?? (weather?.location ?? 'Unknown Location');
+        final condition = weather?.condition ?? 'Clear';
 
-        return _buildMeter(context, temp, feels, loc);
+        return _buildMeter(context, temp, feels, loc, condition);
       },
       loading: () => _buildMeter(
         context,
-        temperature ?? MockData.weatherTemp,
-        feelsLike ?? MockData.weatherFeelsLike,
-        location ?? MockData.weatherLocation,
+        temperature ?? 0,
+        feelsLike ?? 0,
+        location ?? 'Loading...',
+        'Clear',
       ),
       error: (err, stack) => _buildMeter(
         context,
-        temperature ?? MockData.weatherTemp,
-        feelsLike ?? MockData.weatherFeelsLike,
-        location ?? MockData.weatherLocation,
+        temperature ?? 0,
+        feelsLike ?? 0,
+        location ?? 'Error',
+        'Clear',
       ),
     );
   }
 
-  Widget _buildMeter(BuildContext context, int temp, int feels, String loc) {
+  IconData _getWeatherIcon(String condition) {
+    switch (condition.toLowerCase()) {
+      case 'clear': return Icons.wb_sunny_rounded;
+      case 'clouds': return Icons.cloud_queue_rounded;
+      case 'rain': 
+      case 'drizzle': return Icons.water_drop_rounded;
+      case 'thunderstorm': return Icons.thunderstorm_rounded;
+      case 'snow': return Icons.ac_unit_rounded;
+      case 'mist':
+      case 'fog':
+      case 'haze': return Icons.foggy;
+      default: return Icons.wb_sunny_rounded;
+    }
+  }
+
+  Widget _buildMeter(BuildContext context, int temp, int feels, String loc, String condition) {
     final colors = context.hhColors;
 
     // Position on the gauge (0.0 to 1.0) based on temp range 15–45°C.
@@ -95,8 +112,8 @@ class SunMeter extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(
-                          Icons.wb_sunny_rounded,
+                        Icon(
+                          _getWeatherIcon(condition),
                           color: AppColors.orangeBright,
                           size: 13,
                         )
@@ -165,20 +182,32 @@ class SunMeter extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'feels',
-                          style: AppTypography.labelSmall.copyWith(
-                            color: colors.textLow,
-                            fontSize: 9,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                        Text(
-                          '$feels°',
+                          condition,
                           style: AppTypography.labelSmall.copyWith(
                             color: colors.textMid,
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                           ),
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              'feels ',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: colors.textLow,
+                                fontSize: 9,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            Text(
+                              '$feels°',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: colors.textMid,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -213,9 +242,8 @@ class SunMeter extends ConsumerWidget {
                       duration: const Duration(milliseconds: 1000),
                       curve: Curves.easeOutBack,
                           builder: (context, value, child) {
-                            return Positioned(
-                              left: value,
-                              top: 0,
+                            return Transform.translate(
+                              offset: Offset(value, 0),
                               child: Container(
                                 width: 20,
                                 height: 20,

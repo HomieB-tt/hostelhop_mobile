@@ -4,9 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 import '../repositories/hostels_repository.dart';
 import '../repositories/bookings_repository.dart';
+import '../repositories/profile_repository.dart';
 import '../../features/auth/providers/auth_provider.dart';
 
-import '../mock/mock_data.dart';
 
 final hostelsRepositoryProvider = Provider<HostelsRepository>((ref) {
   return HostelsRepository(Supabase.instance.client);
@@ -16,13 +16,10 @@ final hostelsProvider = FutureProvider<List<Hostel>>((ref) async {
   final repository = ref.watch(hostelsRepositoryProvider);
   try {
     final hostels = await repository.getHostels();
-    if (hostels.isEmpty) {
-      return MockData.hostels;
-    }
     return hostels;
   } catch (e) {
-    // Fallback to mock data if there's an error (e.g. no RLS policies set up yet)
-    return MockData.hostels;
+    // Return empty or rethrow
+    rethrow;
   }
 });
 
@@ -36,6 +33,17 @@ final myBookingsProvider = FutureProvider<List<Booking>>((ref) async {
   
   final repository = ref.watch(bookingsRepositoryProvider);
   return repository.getMyBookings(user.id);
+});
+
+final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
+  return ProfileRepository(Supabase.instance.client);
+});
+
+final currentProfileProvider = FutureProvider<StudentProfile?>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return null;
+  final repo = ref.watch(profileRepositoryProvider);
+  return repo.getProfile(user.id);
 });
 
 class SavedHostelsNotifier extends Notifier<List<String>> {

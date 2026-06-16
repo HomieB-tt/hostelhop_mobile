@@ -113,8 +113,14 @@ class RoomDetailScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'This ${room.roomType.toLowerCase()} room is located in ${hostel?.name ?? 'the hostel'}. It offers a comfortable living space with essential amenities for students.',
-                    style: AppTypography.bodyMedium.copyWith(color: colors.textMid, height: 1.5),
+                    room.description.isNotEmpty
+                        ? room.description
+                        : 'No description provided for this room yet.',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: room.description.isNotEmpty ? colors.textMid : colors.textLow,
+                      height: 1.5,
+                      fontStyle: room.description.isEmpty ? FontStyle.italic : FontStyle.normal,
+                    ),
                   ),
                 ],
               ),

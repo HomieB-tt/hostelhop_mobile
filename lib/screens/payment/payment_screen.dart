@@ -8,22 +8,23 @@ import '../../core/constants/app_strings.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/snackbar_utils.dart';
 import '../../data/models/models.dart';
-import '../../data/mock/mock_data.dart';
+import '../../data/providers/data_providers.dart';
 import '../../widgets/gradient_button.dart';
 import 'checkout_sheet.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Payment screen — select method and initiate payment.
-class PaymentScreen extends StatefulWidget {
+class PaymentScreen extends ConsumerStatefulWidget {
   const PaymentScreen({super.key, required this.hostel, required this.room});
 
   final Hostel hostel;
   final Room room;
 
   @override
-  State<PaymentScreen> createState() => _PaymentScreenState();
+  ConsumerState<PaymentScreen> createState() => _PaymentScreenState();
 }
 
-class _PaymentScreenState extends State<PaymentScreen> {
+class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   String _selectedMethod = 'MTN Mobile Money';
   final TextEditingController _phoneController = TextEditingController();
 
@@ -31,8 +32,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
   void initState() {
     super.initState();
     _phoneController.addListener(_onPhoneChanged);
-    // Pre-fill with user's phone if available
-    _phoneController.text = MockData.studentProfile.phone;
+    
+    // Defer reading the provider until after initState
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final profile = ref.read(currentProfileProvider).value;
+      if (profile != null && profile.phone.isNotEmpty) {
+        _phoneController.text = profile.phone;
+      }
+    });
   }
 
   @override
