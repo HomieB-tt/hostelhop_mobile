@@ -8,12 +8,10 @@ import '../../core/utils/formatters.dart';
 import '../../data/models/models.dart';
 import '../../data/providers/data_providers.dart';
 import '../../features/auth/providers/auth_provider.dart';
-import '../../core/services/pesapal_service.dart';
 import '../../core/utils/snackbar_utils.dart';
 import '../../widgets/otp_verification_sheet.dart';
 import '../../widgets/gradient_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 
 /// Half-screen checkout bottom sheet.
@@ -96,55 +94,18 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet>
         amount: widget.room.pricePerSemester,
       );
 
-      // 2. Init Pesapal
-      final pesapalService = PesaPalService();
-      final token = await pesapalService.getAccessToken();
+      // Simulate payment success
+      await Future.delayed(const Duration(seconds: 2));
       
-      if (token == null) throw Exception('Failed to authenticate with PesaPal');
+      // 2. Confirm booking (this will update status and occupancy)
+      await bookingRepo.confirmBooking(bookingId);
 
-      // 3. Register IPN (Using the edge function URL)
-      final ipnUrl = 'https://xmaufqjehbjopczumpgl.supabase.co/functions/v1/pesapal-ipn';
-      final ipnId = await pesapalService.registerIpn(token, ipnUrl);
-      
-      if (ipnId == null) throw Exception('Failed to register IPN');
+      // Remove from saved if it was saved
+      ref.read(savedHostelsProvider.notifier).toggle(widget.hostel.id);
 
-      // 4. Submit Order
-      // Parse first and last name
-      final names = profile.fullName.split(' ');
-      final firstName = names.isNotEmpty ? names.first : 'Student';
-      final lastName = names.length > 1 ? names.last : 'User';
-
-      final orderResponse = await pesapalService.submitOrder(
-        token: token,
-        ipnId: ipnId,
-        orderId: bookingId,
-        amount: widget.room.pricePerSemester.toDouble(),
-        description: 'HostelHop Booking: ${widget.hostel.name} - ${widget.room.roomType}',
-        email: profile.email ?? user.email ?? 'no-email@hostelhop.ug',
-        phoneNumber: widget.phoneNumber,
-        firstName: firstName,
-        lastName: lastName,
-      );
-
-      if (orderResponse == null || !orderResponse.containsKey('redirect_url')) {
-        throw Exception('Failed to submit order to PesaPal');
-      }
-
-      // 5. Open Payment URL
-      final redirectUrl = orderResponse['redirect_url'];
-      final uri = Uri.parse(redirectUrl);
-      
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        
-        // Wait briefly then assume success (real app would poll status or rely on IPN + websocket)
-        await Future.delayed(const Duration(seconds: 2));
-        if (mounted) {
-          setState(() => _state = _CheckoutState.success);
-          _checkController.forward();
-        }
-      } else {
-        throw Exception('Could not launch payment URL');
+      if (mounted) {
+        setState(() => _state = _CheckoutState.success);
+        _checkController.forward();
       }
     } catch (e) {
       if (mounted) {

@@ -23,6 +23,11 @@ final hostelsProvider = FutureProvider<List<Hostel>>((ref) async {
   }
 });
 
+final hostelsStreamProvider = StreamProvider<List<Hostel>>((ref) {
+  final repository = ref.watch(hostelsRepositoryProvider);
+  return repository.getHostelsStream();
+});
+
 final bookingsRepositoryProvider = Provider<BookingsRepository>((ref) {
   return BookingsRepository(Supabase.instance.client);
 });

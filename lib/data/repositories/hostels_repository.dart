@@ -33,4 +33,11 @@ class HostelsRepository {
       rethrow;
     }
   }
+
+  Stream<List<Hostel>> getHostelsStream() {
+    return _supabase
+        .from('hostels')
+        .stream(primaryKey: ['id'])
+        .map((maps) => maps.map((json) => Hostel.fromJson(json)).toList());
+  }
 }

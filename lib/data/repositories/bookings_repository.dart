@@ -23,6 +23,10 @@ class BookingsRepository {
     return response['id'] as String;
   }
 
+  Future<void> confirmBooking(String bookingId) async {
+    await _supabase.rpc('handle_booking_payment', params: {'booking_id': bookingId});
+  }
+
   Future<List<Booking>> getMyBookings(String studentId) async {
     try {
       final response = await _supabase
