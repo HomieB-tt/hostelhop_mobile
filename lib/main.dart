@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
+import 'core/constants/app_constants.dart';
 import 'services/notifications_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/shared_preferences_provider.dart';
@@ -24,17 +24,24 @@ void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // Load env
-    await dotenv.load(fileName: ".env");
+    final missing = AppConstants.missingRequired;
+    if (missing.isNotEmpty) {
+      throw StateError(
+        'Missing build configuration: ${missing.join(', ')}.\n'
+        'Run with --dart-define-from-file=.env (see README).',
+      );
+    }
 
     // Initialize Firebase
     await Firebase.initializeApp(
       options: FirebaseOptions(
-        apiKey: dotenv.env['FIREBASE_API_KEY'] ?? '',
-        appId: dotenv.env['FIREBASE_APP_ID'] ?? '',
-        messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
-        projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
-        storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'],
+        apiKey: AppConstants.firebaseApiKey,
+        appId: AppConstants.firebaseAppId,
+        messagingSenderId: AppConstants.firebaseMessagingSenderId,
+        projectId: AppConstants.firebaseProjectId,
+        storageBucket: AppConstants.firebaseStorageBucket.isEmpty
+            ? null
+            : AppConstants.firebaseStorageBucket,
       ),
     );
 
@@ -44,8 +51,8 @@ void main() async {
 
     // Initialize Supabase
     await Supabase.initialize(
-      url: dotenv.env['SUPABASE_URL'] ?? '',
-      anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+      url: AppConstants.supabaseUrl,
+      anonKey: AppConstants.supabaseAnonKey,
     );
 
     // Lock to portrait orientation.

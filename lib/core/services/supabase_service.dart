@@ -51,24 +51,29 @@ class SupabaseService {
     }
   }
 
-  Future<void> signInWithPhone(String phone) async {
+  /// Starts attaching [phone] (E.164, e.g. +2567XXXXXXXX) to the CURRENT
+  /// user. Supabase sends an SMS code. This does not create or switch
+  /// accounts, unlike `signInWithOtp`.
+  Future<void> requestPhoneVerification(String phone) async {
     try {
-      await _supabase.auth.signInWithOtp(phone: phone);
-    } catch (e) {
-      rethrow;
+      await _supabase.auth.updateUser(UserAttributes(phone: phone));
+    } on AuthException catch (e) {
+      throw Exception(e.message);
     }
   }
 
-  Future<Session?> verifyPhoneOtp(String phone, String token) async {
+  /// Confirms the SMS code. Returns the updated user, or null if Supabase
+  /// did not return one.
+  Future<User?> verifyPhoneChange(String phone, String token) async {
     try {
       final response = await _supabase.auth.verifyOTP(
-        type: OtpType.sms,
+        type: OtpType.phoneChange,
         token: token,
         phone: phone,
       );
-      return response.session;
-    } catch (e) {
-      rethrow;
+      return response.user;
+    } on AuthException catch (e) {
+      throw Exception(e.message);
     }
   }
 

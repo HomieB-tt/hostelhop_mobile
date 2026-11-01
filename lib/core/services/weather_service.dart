@@ -1,11 +1,11 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../constants/app_constants.dart';
 import '../../data/models/models.dart';
 
 class WeatherService {
-  final String _apiKey = dotenv.env['OPENWEATHER_API_KEY'] ?? '';
-  final String _baseUrl = '${dotenv.env['OPENWEATHER_BASE_URL']}data/2.5';
+  final String _apiKey = AppConstants.openWeatherApiKey;
+  final String _baseUrl = '${AppConstants.openWeatherBaseUrl.endsWith('/') ? AppConstants.openWeatherBaseUrl : '${AppConstants.openWeatherBaseUrl}/'}data/2.5';
 
   WeatherService();
 

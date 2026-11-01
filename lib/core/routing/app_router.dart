@@ -17,7 +17,16 @@ import 'package:hostelhop_mobile/data/models/models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
+  // Re-run `redirect` whenever the auth status changes (sign-in, sign-out,
+  // session expiry). `listen` (not `watch`) so the router is never rebuilt.
+  final authRefresh = ValueNotifier<int>(0);
+  ref.listen(authProvider, (previous, next) {
+    if (previous?.status != next.status) authRefresh.value++;
+  });
+  ref.onDispose(authRefresh.dispose);
+
   return GoRouter(
+    refreshListenable: authRefresh,
     initialLocation: '/splash',
     debugLogDiagnostics: true,
     redirect: (context, state) {

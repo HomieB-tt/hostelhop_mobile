@@ -13,7 +13,7 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../widgets/gradient_button.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../core/constants/app_constants.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -84,9 +84,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           _selectedCampusName!,
         );
 
+    if (!mounted) return;
     final authState = ref.read(authProvider);
-    if (authState.errorMessage != null && mounted) {
+    if (authState.errorMessage != null) {
       SnackBarUtils.showError(context, authState.errorMessage!);
+    } else if (authState.noticeMessage != null) {
+      SnackBarUtils.showSuccess(context, authState.noticeMessage!);
+      context.go('/login');
     }
   }
 
@@ -301,7 +305,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       _buildFieldLabel('University / Campus'),
                       GooglePlaceAutoCompleteTextField(
                         textEditingController: _campusController,
-                        googleAPIKey: dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '',
+                        googleAPIKey: AppConstants.googleMapsApiKey,
                         inputDecoration: _inputDecoration(
                           hint: 'Search university or campus',
                           icon: Icons.school_outlined,

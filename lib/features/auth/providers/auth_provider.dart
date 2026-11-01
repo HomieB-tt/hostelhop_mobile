@@ -10,34 +10,61 @@ class AuthState {
   final AuthStatus status;
   final User? user;
   final String? errorMessage;
+  final String? noticeMessage;
   final bool isLoading;
 
   const AuthState({
     required this.status,
     this.user,
     this.errorMessage,
+    this.noticeMessage,
     this.isLoading = false,
   });
 
+  /// Passing `null` for a field keeps its current value. Use the `clear*`
+  /// flags to explicitly reset a nullable field back to `null`.
   AuthState copyWith({
     AuthStatus? status,
     User? user,
     String? errorMessage,
+    String? noticeMessage,
     bool? isLoading,
+    bool clearUser = false,
+    bool clearError = false,
+    bool clearNotice = false,
   }) {
     return AuthState(
       status: status ?? this.status,
-      user: user ?? this.user,
-      errorMessage: errorMessage ?? this.errorMessage,
+      user: clearUser ? null : (user ?? this.user),
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      noticeMessage: clearNotice ? null : (noticeMessage ?? this.noticeMessage),
       isLoading: isLoading ?? this.isLoading,
     );
   }
 }
 
+String _messageFrom(Object e) => e.toString().replaceAll('Exception: ', '');
+
 // Auth notifier using Riverpod
 class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
+    // Keep in sync with Supabase (token refresh, sign-out from elsewhere,
+    // session recovery) instead of only reading the user once at startup.
+    final subscription =
+        ref.read(supabaseServiceProvider).authStateChanges.listen((data) {
+      final session = data.session;
+      if (session != null) {
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          user: session.user,
+        );
+      } else if (data.event == AuthChangeEvent.signedOut) {
+        state = const AuthState(status: AuthStatus.unauthenticated);
+      }
+    });
+    ref.onDispose(subscription.cancel);
+
     _checkAuthStatus();
     return const AuthState(status: AuthStatus.checking);
   }
@@ -60,21 +87,24 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.unauthenticated,
-        errorMessage: e.toString().replaceAll('Exception: ', ''),
+        errorMessage: _messageFrom(e),
         isLoading: false,
       );
     }
   }
 
   Future<void> signIn(String email, String password) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
+    state = state.copyWith(
+        isLoading: true, clearError: true, clearNotice: true);
     try {
-      final response = await ref.read(supabaseServiceProvider).signInWithEmail(email, password);
+      final response =
+          await ref.read(supabaseServiceProvider).signInWithEmail(email, password);
       if (response != null) {
         state = state.copyWith(
           status: AuthStatus.authenticated,
           user: response.user,
           isLoading: false,
+          clearError: true,
         );
       } else {
         state = state.copyWith(
@@ -86,21 +116,37 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.unauthenticated,
-        errorMessage: e.toString().replaceAll('Exception: ', ''),
+        errorMessage: _messageFrom(e),
         isLoading: false,
       );
     }
   }
 
-  Future<void> signUp(String email, String password, String fullName, String phone, String campusId) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
+  Future<void> signUp(String email, String password, String fullName,
+      String phone, String campusId) async {
+    state = state.copyWith(
+        isLoading: true, clearError: true, clearNotice: true);
     try {
-      final response = await ref.read(supabaseServiceProvider).signUpWithEmail(email, password, fullName, phone, campusId);
-      if (response.user != null) {
+      final response = await ref
+          .read(supabaseServiceProvider)
+          .signUpWithEmail(email, password, fullName, phone, campusId);
+      if (response.session != null) {
+        // Signed in straight away (email confirmation disabled in Supabase).
         state = state.copyWith(
           status: AuthStatus.authenticated,
           user: response.user,
           isLoading: false,
+          clearError: true,
+        );
+      } else if (response.user != null) {
+        // Account exists but there is no session yet: the email still needs
+        // to be confirmed, so the user is NOT authenticated.
+        state = state.copyWith(
+          status: AuthStatus.unauthenticated,
+          isLoading: false,
+          clearError: true,
+          noticeMessage:
+              'Account created. Check your email to confirm your address, then sign in.',
         );
       } else {
         state = state.copyWith(
@@ -112,49 +158,35 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.unauthenticated,
-        errorMessage: e.toString().replaceAll('Exception: ', ''),
+        errorMessage: _messageFrom(e),
         isLoading: false,
       );
     }
   }
 
-  Future<void> signInWithPhone(String phone) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
+  /// Sends an SMS code to attach [phone] (E.164) to the signed-in user.
+  /// Returns an error message, or `null` on success. Does not touch the
+  /// global auth status, so a failure here can never log the user out.
+  Future<String?> requestPhoneVerification(String phone) async {
     try {
-      await ref.read(supabaseServiceProvider).signInWithPhone(phone);
-      state = state.copyWith(isLoading: false);
+      await ref.read(supabaseServiceProvider).requestPhoneVerification(phone);
+      return null;
     } catch (e) {
-      state = state.copyWith(
-        status: AuthStatus.unauthenticated,
-        errorMessage: e.toString().replaceAll('Exception: ', ''),
-        isLoading: false,
-      );
+      return _messageFrom(e);
     }
   }
 
-  Future<void> verifyPhoneOtp(String phone, String token) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
+  /// Verifies the SMS [code] for [phone]. Returns an error message, or
+  /// `null` only when Supabase confirmed the code.
+  Future<String?> verifyPhone(String phone, String code) async {
     try {
-      final session = await ref.read(supabaseServiceProvider).verifyPhoneOtp(phone, token);
-      if (session != null) {
-        state = state.copyWith(
-          status: AuthStatus.authenticated,
-          user: session.user,
-          isLoading: false,
-        );
-      } else {
-        state = state.copyWith(
-          status: AuthStatus.unauthenticated,
-          errorMessage: 'Invalid OTP',
-          isLoading: false,
-        );
-      }
+      final user =
+          await ref.read(supabaseServiceProvider).verifyPhoneChange(phone, code);
+      if (user == null) return 'Invalid or expired code. Please try again.';
+      state = state.copyWith(user: user);
+      return null;
     } catch (e) {
-      state = state.copyWith(
-        status: AuthStatus.unauthenticated,
-        errorMessage: e.toString().replaceAll('Exception: ', ''),
-        isLoading: false,
-      );
+      return _messageFrom(e);
     }
   }
 
@@ -164,7 +196,7 @@ class AuthNotifier extends Notifier<AuthState> {
       await ref.read(supabaseServiceProvider).signOut();
       state = const AuthState(status: AuthStatus.unauthenticated);
     } catch (e) {
-      state = state.copyWith(errorMessage: e.toString().replaceAll('Exception: ', ''), isLoading: false);
+      state = state.copyWith(errorMessage: _messageFrom(e), isLoading: false);
     }
   }
 }

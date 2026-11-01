@@ -7,7 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../core/constants/app_constants.dart';
 
 import '../../core/utils/snackbar_utils.dart';
 import '../../data/providers/data_providers.dart';
@@ -254,7 +254,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               const SizedBox(height: 8),
               GooglePlaceAutoCompleteTextField(
                 textEditingController: _campusController,
-                googleAPIKey: dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '',
+                googleAPIKey: AppConstants.googleMapsApiKey,
                 inputDecoration: InputDecoration(
                   hintText: 'Search university or campus',
                   prefixIcon: Icon(Icons.school_outlined, size: 20, color: colors.textMid),

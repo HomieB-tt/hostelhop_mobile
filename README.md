@@ -42,6 +42,20 @@ HostelHop is a modern mobile application designed to streamline the student acco
 
 ---
 
+## ⚙️ Configuration
+
+Runtime settings (Supabase, Firebase, OpenWeather, Google Places) are **not** bundled as a file. They are injected at build time:
+
+```bash
+cp .env.example .env        # then fill in the values (.env is gitignored)
+flutter run --dart-define-from-file=.env
+flutter build apk --release --dart-define-from-file=.env
+```
+
+The app shows a "Missing build configuration" screen listing any required value that is empty. Anything compiled into a client app can be extracted from it, so keep server secrets (payment provider secrets, Supabase service-role key) on a backend and never in `.env`.
+
+---
+
 ## 📂 Project Structure
 
 ```text
