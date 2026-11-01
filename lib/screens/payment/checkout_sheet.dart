@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -41,6 +43,8 @@ enum _CheckoutState { confirm, processing, success, failed }
 class _CheckoutSheetState extends ConsumerState<CheckoutSheet>
     with SingleTickerProviderStateMixin {
   _CheckoutState _state = _CheckoutState.confirm;
+  // Kept across retries so a failed attempt never leaves duplicate pending bookings.
+  String? _bookingId;
   late final AnimationController _checkController;
 
   @override
@@ -65,7 +69,8 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet>
     final profile = ref.read(currentProfileProvider).value;
 
     if (user == null || profile == null) {
-      if (mounted) SnackBarUtils.showError(context, 'You must be logged in to pay.');
+      if (!mounted) return;
+      SnackBarUtils.showError(context, 'You must be logged in to pay.');
       setState(() => _state = _CheckoutState.failed);
       return;
     }
@@ -78,21 +83,24 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet>
         builder: (context) => OTPVerificationSheet(phoneNumber: profile.phone),
       );
 
+      if (!mounted) return;
       if (confirmed != true) {
-        if (mounted) SnackBarUtils.showError(context, 'Phone verification required to pay.');
+        SnackBarUtils.showError(context, 'Phone verification required to pay.');
         setState(() => _state = _CheckoutState.confirm);
         return;
       }
     }
 
     try {
-      // 1. Create booking (Pending)
+      // 1. Create booking (Pending) once; reuse it if the user retries.
       final bookingRepo = ref.read(bookingsRepositoryProvider);
-      final bookingId = await bookingRepo.createBooking(
-        studentId: user.id,
-        roomId: widget.room.id,
-        amount: widget.room.pricePerSemester,
-      );
+      final String bookingId = _bookingId ??
+          await bookingRepo.createBooking(
+            studentId: user.id,
+            roomId: widget.room.id,
+            amount: widget.room.pricePerSemester,
+          );
+      _bookingId = bookingId;
 
       // Simulate payment success
       await Future.delayed(const Duration(seconds: 2));
@@ -100,14 +108,17 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet>
       // 2. Confirm booking (this will update status and occupancy)
       await bookingRepo.confirmBooking(bookingId);
 
-      // Remove from saved if it was saved
-      ref.read(savedHostelsProvider.notifier).toggle(widget.hostel.id);
+      // Remove from saved only if it was saved (toggle would otherwise add it).
+      if (ref.read(savedHostelsProvider).contains(widget.hostel.id)) {
+        ref.read(savedHostelsProvider.notifier).toggle(widget.hostel.id);
+      }
 
       if (mounted) {
         setState(() => _state = _CheckoutState.success);
         _checkController.forward();
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      log('Checkout failed: $e', stackTrace: stackTrace);
       if (mounted) {
         setState(() => _state = _CheckoutState.failed);
       }
